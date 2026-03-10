@@ -1,0 +1,1395 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>茹婷的AI PM成长计划</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@400;700&family=Space+Mono:wght@400;700&family=Noto+Sans+SC:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --ink: #1a1410;
+    --paper: #f5f0e8;
+    --accent: #c84b2f;
+    --gold: #d4a843;
+    --muted: #8a7d6e;
+    --green: #3a7d44;
+    --card-bg: #faf7f2;
+    --border: #d9d0c0;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: var(--paper);
+    color: var(--ink);
+    font-family: 'Noto Sans SC', sans-serif;
+    font-weight: 300;
+    min-height: 100vh;
+    padding: 0 0 80px 0;
+  }
+
+  /* Header */
+  .header {
+    background: var(--ink);
+    color: var(--paper);
+    padding: 10px 20px 0;
+    position: fixed;
+    top: 0; left: 0; right: 0;
+    z-index: 100;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+  }
+
+  .header::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background: repeating-linear-gradient(
+      90deg,
+      transparent,
+      transparent 60px,
+      rgba(255,255,255,0.02) 60px,
+      rgba(255,255,255,0.02) 61px
+    );
+    pointer-events: none;
+  }
+
+  .header-top {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 8px;
+  }
+
+  .header-title {
+    font-family: 'Noto Serif SC', serif;
+    font-size: 14px;
+    letter-spacing: 1px;
+    position: relative;
+  }
+
+  .header-subtitle {
+    font-family: 'Space Mono', monospace;
+    font-size: 9px;
+    color: var(--gold);
+    letter-spacing: 2px;
+    margin-top: 2px;
+    text-transform: uppercase;
+  }
+
+  .date-badge {
+    font-family: 'Space Mono', monospace;
+    font-size: 9px;
+    color: rgba(245,240,232,0.5);
+    text-align: right;
+  }
+
+  .progress-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 0;
+  }
+
+  .progress-bar-wrap {
+    flex: 1;
+    height: 2px;
+    background: rgba(255,255,255,0.15);
+    border-radius: 2px;
+    overflow: hidden;
+  }
+
+  .progress-bar-fill {
+    height: 100%;
+    background: var(--gold);
+    border-radius: 2px;
+    transition: width 0.6s ease;
+  }
+
+  .progress-text {
+    font-family: 'Space Mono', monospace;
+    font-size: 12px;
+    color: var(--gold);
+    white-space: nowrap;
+  }
+
+  /* Tab Nav */
+  .tab-nav {
+    display: flex;
+    border-bottom: 1px solid var(--border);
+    padding: 0 24px;
+    background: var(--card-bg);
+    position: sticky;
+    top: 0;
+    z-index: 10;
+  }
+
+  .tab-btn {
+    padding: 16px 20px;
+    font-size: 13px;
+    font-family: 'Noto Sans SC', sans-serif;
+    font-weight: 400;
+    border: none;
+    background: none;
+    cursor: pointer;
+    color: var(--muted);
+    border-bottom: 2px solid transparent;
+    margin-bottom: -1px;
+    transition: all 0.2s;
+    letter-spacing: 0.5px;
+  }
+
+  .tab-btn.active {
+    color: var(--accent);
+    border-bottom-color: var(--accent);
+  }
+
+  /* Main content */
+  .content {
+    max-width: 760px;
+    margin: 0 auto;
+    padding: 32px 24px;
+  }
+
+  /* Day card */
+  .day-card {
+    background: var(--card-bg);
+    border: 1px solid var(--border);
+    border-radius: 2px;
+    margin-bottom: 24px;
+    overflow: hidden;
+    transition: box-shadow 0.2s;
+  }
+
+  .day-card:hover {
+    box-shadow: 4px 4px 0 var(--border);
+  }
+
+  .day-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 18px 24px;
+    border-bottom: 1px solid var(--border);
+    cursor: pointer;
+  }
+
+  .day-label {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+  }
+
+  .day-num {
+    font-family: 'Space Mono', monospace;
+    font-size: 11px;
+    font-weight: 700;
+    color: var(--accent);
+    letter-spacing: 2px;
+    background: rgba(200,75,47,0.08);
+    padding: 4px 10px;
+    border-radius: 2px;
+  }
+
+  .day-title {
+    font-family: 'Noto Serif SC', serif;
+    font-size: 16px;
+    color: var(--ink);
+  }
+
+  .day-status {
+    font-family: 'Space Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 1px;
+    padding: 4px 10px;
+    border-radius: 2px;
+  }
+
+  .day-status.done {
+    background: rgba(58,125,68,0.1);
+    color: var(--green);
+  }
+
+  .day-status.pending {
+    background: rgba(138,125,110,0.1);
+    color: var(--muted);
+  }
+
+  /* Task body */
+  .day-body {
+    padding: 24px;
+    display: none;
+  }
+
+  .day-body.open {
+    display: block;
+    animation: slideDown 0.25s ease;
+  }
+
+  @keyframes slideDown {
+    from { opacity: 0; transform: translateY(-8px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  /* Article summary */
+  .article-block {
+    border-left: 3px solid var(--gold);
+    padding: 16px 20px;
+    background: rgba(212,168,67,0.05);
+    margin-bottom: 20px;
+    border-radius: 0 2px 2px 0;
+  }
+
+  .article-meta {
+    font-family: 'Space Mono', monospace;
+    font-size: 10px;
+    color: var(--muted);
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    margin-bottom: 8px;
+  }
+
+  .article-title {
+    font-family: 'Noto Serif SC', serif;
+    font-size: 15px;
+    font-weight: 700;
+    margin-bottom: 12px;
+    color: var(--ink);
+    line-height: 1.5;
+  }
+
+  .article-summary {
+    font-size: 13px;
+    line-height: 1.9;
+    color: #3a3028;
+  }
+
+  .article-summary p {
+    margin-bottom: 10px;
+  }
+
+  .article-source {
+    font-family: 'Space Mono', monospace;
+    font-size: 10px;
+    color: var(--muted);
+    margin-top: 12px;
+    padding-top: 10px;
+    border-top: 1px dashed var(--border);
+  }
+
+  .article-source a {
+    color: var(--accent);
+    text-decoration: none;
+  }
+
+  /* Key points */
+  .keypoints {
+    margin: 20px 0;
+  }
+
+  .keypoints-title {
+    font-family: 'Space Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 2px;
+    color: var(--muted);
+    text-transform: uppercase;
+    margin-bottom: 12px;
+  }
+
+  .keypoint {
+    display: flex;
+    gap: 12px;
+    margin-bottom: 10px;
+    align-items: flex-start;
+  }
+
+  .keypoint-dot {
+    width: 6px;
+    height: 6px;
+    background: var(--accent);
+    border-radius: 50%;
+    margin-top: 7px;
+    flex-shrink: 0;
+  }
+
+  .keypoint-text {
+    font-size: 13px;
+    line-height: 1.75;
+    color: #3a3028;
+  }
+
+  /* Reflection prompt */
+  .reflection-block {
+    background: rgba(26,20,16,0.03);
+    border: 1px solid var(--border);
+    border-radius: 2px;
+    padding: 16px 20px;
+    margin-top: 20px;
+  }
+
+  .reflection-label {
+    font-family: 'Space Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 2px;
+    color: var(--accent);
+    text-transform: uppercase;
+    margin-bottom: 10px;
+  }
+
+  .reflection-q {
+    font-size: 13px;
+    color: var(--ink);
+    font-style: italic;
+    line-height: 1.7;
+    font-family: 'Noto Serif SC', serif;
+    margin-bottom: 12px;
+  }
+
+  .reflection-input {
+    width: 100%;
+    border: 1px solid var(--border);
+    background: white;
+    padding: 12px;
+    font-family: 'Noto Sans SC', sans-serif;
+    font-size: 13px;
+    color: var(--ink);
+    resize: vertical;
+    min-height: 80px;
+    outline: none;
+    border-radius: 1px;
+    transition: border-color 0.2s;
+  }
+
+  .reflection-input:focus {
+    border-color: var(--accent);
+  }
+
+  /* Check button */
+  .check-row {
+    display: flex;
+    justify-content: flex-end;
+    margin-top: 20px;
+    gap: 10px;
+    align-items: center;
+  }
+
+  .check-btn {
+    font-family: 'Space Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    padding: 10px 24px;
+    border: 1.5px solid var(--ink);
+    background: transparent;
+    color: var(--ink);
+    cursor: pointer;
+    transition: all 0.15s;
+    border-radius: 1px;
+  }
+
+  .check-btn:hover {
+    background: var(--ink);
+    color: var(--paper);
+  }
+
+  .check-btn.checked {
+    background: var(--green);
+    border-color: var(--green);
+    color: white;
+  }
+
+  /* Exercise card */
+  .exercise-strip {
+    display: flex;
+    gap: 12px;
+    flex-wrap: wrap;
+    margin-top: 8px;
+  }
+
+  .ex-item {
+    flex: 1;
+    min-width: 140px;
+    background: var(--card-bg);
+    border: 1px solid var(--border);
+    padding: 14px 16px;
+    border-radius: 2px;
+  }
+
+  .ex-icon {
+    font-size: 20px;
+    margin-bottom: 6px;
+  }
+
+  .ex-name {
+    font-family: 'Noto Serif SC', serif;
+    font-size: 13px;
+    font-weight: 700;
+    margin-bottom: 2px;
+  }
+
+  .ex-detail {
+    font-size: 11px;
+    color: var(--muted);
+    font-family: 'Space Mono', monospace;
+  }
+
+  .ex-check {
+    margin-top: 10px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    cursor: pointer;
+  }
+
+  .ex-checkbox {
+    width: 16px;
+    height: 16px;
+    border: 1.5px solid var(--border);
+    border-radius: 2px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.15s;
+    flex-shrink: 0;
+  }
+
+  .ex-checkbox.checked {
+    background: var(--green);
+    border-color: var(--green);
+    color: white;
+    font-size: 10px;
+  }
+
+  .ex-check-label {
+    font-size: 11px;
+    color: var(--muted);
+  }
+
+  /* Weekly goal */
+  .weekly-block {
+    background: var(--ink);
+    color: var(--paper);
+    padding: 24px;
+    border-radius: 2px;
+    margin-top: 32px;
+  }
+
+  .weekly-label {
+    font-family: 'Space Mono', monospace;
+    font-size: 10px;
+    color: var(--gold);
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    margin-bottom: 12px;
+  }
+
+  .weekly-title {
+    font-family: 'Noto Serif SC', serif;
+    font-size: 18px;
+    margin-bottom: 12px;
+  }
+
+  .weekly-desc {
+    font-size: 13px;
+    color: rgba(245,240,232,0.7);
+    line-height: 1.8;
+  }
+
+  .weekly-check-btn {
+    margin-top: 16px;
+    font-family: 'Space Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 1px;
+    padding: 8px 20px;
+    border: 1px solid var(--gold);
+    background: transparent;
+    color: var(--gold);
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+
+  .weekly-check-btn:hover, .weekly-check-btn.done {
+    background: var(--gold);
+    color: var(--ink);
+  }
+
+  /* Section header */
+  .section-hd {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 20px;
+  }
+
+  .section-hd h2 {
+    font-family: 'Noto Serif SC', serif;
+    font-size: 18px;
+    font-weight: 700;
+  }
+
+  .section-hd-line {
+    flex: 1;
+    height: 1px;
+    background: var(--border);
+  }
+
+  /* Tag */
+  .tag {
+    display: inline-block;
+    font-family: 'Space Mono', monospace;
+    font-size: 9px;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    padding: 3px 8px;
+    border-radius: 2px;
+    margin-right: 6px;
+    margin-bottom: 8px;
+  }
+
+  .tag-blue { background: rgba(47,100,200,0.1); color: #2f64c8; }
+  .tag-red { background: rgba(200,75,47,0.1); color: var(--accent); }
+  .tag-green { background: rgba(58,125,68,0.1); color: var(--green); }
+
+  /* Hidden tab panels */
+  .tab-panel { display: none; }
+  .tab-panel.active { display: block; }
+
+  /* Streak */
+  .streak-row {
+    display: flex;
+    gap: 6px;
+    margin-bottom: 28px;
+    flex-wrap: wrap;
+  }
+
+  .streak-dot {
+    width: 28px;
+    height: 28px;
+    border-radius: 2px;
+    border: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: 'Space Mono', monospace;
+    font-size: 9px;
+    color: var(--muted);
+    transition: all 0.2s;
+  }
+
+  .streak-dot.done {
+    background: var(--ink);
+    border-color: var(--ink);
+    color: var(--gold);
+  }
+
+  .streak-dot.today {
+    border-color: var(--accent);
+    color: var(--accent);
+  }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="header-top">
+    <div>
+      <div class="header-title">茹婷的 AI PM 成长计划</div>
+      <div class="header-subtitle">Bank PM → AI PM · 每日打卡</div>
+    </div>
+    <div style="display:flex;flex-direction:column;align-items:flex-end;gap:4px;">
+      <div class="date-badge" id="dateBadge"></div>
+      <span id="syncStatus" style="font-family:'Space Mono',monospace;font-size:9px;letter-spacing:1px;color:#d4a843;">连接飞书中...</span>
+    </div>
+  </div>
+  <div class="progress-row" style="padding-bottom:8px;">
+    <div class="progress-bar-wrap">
+      <div class="progress-bar-fill" id="mainProgress" style="width:0%"></div>
+    </div>
+    <div class="progress-text" id="progressText">0 / 4 完成</div>
+  </div>
+</div>
+
+<div class="tab-nav" style="position:fixed;top:var(--header-h,72px);left:0;right:0;z-index:99;">
+  <button class="tab-btn active" onclick="switchTab('learn')">📚 学习任务</button>
+  <button class="tab-btn" onclick="switchTab('interview')">🎯 每日面经</button>
+  <button class="tab-btn" onclick="switchTab('weekly')">📌 周目标</button>
+</div>
+
+<!-- ============= LEARN TAB ============= -->
+<div class="tab-panel active content" id="tab-learn">
+
+  <div class="section-hd">
+    <h2>本周学习任务</h2>
+    <div class="section-hd-line"></div>
+    <span style="font-family:'Space Mono',monospace;font-size:10px;color:var(--muted);">3天循环</span>
+  </div>
+
+  <!-- STREAK -->
+  <div class="streak-row" id="streakRow"></div>
+
+  <!-- DAY 1 -->
+  <div class="day-card" id="card-day1">
+    <div class="day-header" onclick="toggleCard('day1')">
+      <div class="day-label">
+        <span class="day-num">DAY 1</span>
+        <span class="day-title">LLM / Agent 前沿动态</span>
+      </div>
+      <span class="day-status pending" id="status-day1">待完成</span>
+    </div>
+    <div class="day-body" id="body-day1">
+      <div class="article-block">
+        <div class="article-meta">📰 推荐阅读 · 前沿资讯</div>
+        <div class="article-title">2025 年 LLM 大事记：Agent 元年正式到来</div>
+        <div class="article-summary">
+          <p><span class="tag tag-blue">背景</span>2025 年是公认的"Agent 元年"。大模型能力从"单轮问答"飞跃到"自主完成多步骤任务"，这一跃迁直接影响你未来做的每一个 AI 产品。</p>
+          <p><span class="tag tag-red">核心进展</span>强化学习（RLVR）成为 2025 年最大的技术突破——模型通过强化学习自发学会"推理"，表现为 DeepSeek R1、OpenAI o3 等推理模型的爆发。能力提升不靠堆模型大小，靠"思考时间"的延长。</p>
+          <p><span class="tag tag-green">Agent 里程碑</span>Claude Code 被视为"第一个真正意义上的 LLM Agent"，它以循环方式将工具调用与推理串联起来，解决复杂问题。MCP（模型上下文协议）在 2025 年爆炸式普及，成为工具调用的事实标准。</p>
+          <p><span class="tag tag-blue">市场格局</span>Anthropic 以 32% 份额成为企业 AI 市场第一，超越 OpenAI（25%）。企业级 Agent 中最热门的场景是客服（这正是你的主战场）和内部效率工具。</p>
+        </div>
+        <div class="article-source">来源：Simon Willison's Weblog / Karpathy 年度回顾 / Menlo Ventures 市场报告 · <a href="https://simonwillison.net/2025/Dec/31/the-year-in-llms/" target="_blank">阅读原文 →</a></div>
+      </div>
+
+      <div class="keypoints">
+        <div class="keypoints-title">🔑 你需要记住的 3 个关键点</div>
+        <div class="keypoint">
+          <div class="keypoint-dot"></div>
+          <div class="keypoint-text"><strong>Agent ≠ 聊天机器人</strong>：Agent 能循环调用工具、自主规划步骤，你过去做的坐席辅助（意图识别→知识推荐→工单填写）其实已经是早期 Agent 形态，面试时要这样表达。</div>
+        </div>
+        <div class="keypoint">
+          <div class="keypoint-dot"></div>
+          <div class="keypoint-text"><strong>MCP 是新基础设施</strong>：就像当年 REST API 统一了接口，MCP 正在统一 AI 工具调用方式。你的下一个产品方案里，可以考虑如何利用 MCP 打通行内系统。</div>
+        </div>
+        <div class="keypoint">
+          <div class="keypoint-dot"></div>
+          <div class="keypoint-text"><strong>质量仍是最大障碍</strong>：调研显示 32% 的团队把"模型输出质量"列为生产部署第一障碍。你在金融场景做 Badcase 分析、A/B Test 的经验，是稀缺的差异化竞争力。</div>
+        </div>
+      </div>
+
+      <div class="reflection-block">
+        <div class="reflection-label">💭 今日思考题</div>
+        <div class="reflection-q">你的坐席辅助项目（意图识别 → RAG 话术推荐 → 工单 NER）本质上是一个 3 步 Agent。如果今天用 MCP 重新设计这个系统，你会怎么拆解工具调用？</div>
+        <textarea class="reflection-input" id="reflect-day1" placeholder="在这里写下你的思考...（会自动保存）" oninput="saveReflect('day1', this.value)"></textarea>
+      </div>
+
+      <div class="check-row">
+        <span style="font-size:12px;color:var(--muted);">预计耗时 20 分钟</span>
+        <button class="check-btn" id="btn-day1" onclick="markDone('day1')">标记完成 ✓</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- DAY 2 -->
+  <div class="day-card" id="card-day2">
+    <div class="day-header" onclick="toggleCard('day2')">
+      <div class="day-label">
+        <span class="day-num">DAY 2</span>
+        <span class="day-title">拆解非金融 AI 产品</span>
+      </div>
+      <span class="day-status pending" id="status-day2">待完成</span>
+    </div>
+    <div class="day-body" id="body-day2">
+      <div class="article-block">
+        <div class="article-meta">🔍 产品拆解 · 今日案例：Notion AI 3.0</div>
+        <div class="article-title">Notion 3.0：从协作工具到 AI 知识工作 Agent</div>
+        <div class="article-summary">
+          <p><span class="tag tag-blue">产品演进</span>Notion 于 2025 年 9 月发布 3.0 版本，把 AI 从"功能"升级为"Agent"——核心差异是：AI 可以代替用户在 Notion 里完成所有操作，包括创建文档、搭建数据库、跨工具搜索，支持连续运行超 20 分钟。</p>
+          <p><span class="tag tag-red">关键设计决策</span>Notion AI Agent 的独特之处在于"记忆库"机制：Agent 能整合用户 Notion 里所有可访问的信息（包括 Slack、Google Drive、GitHub），上下文不依赖单次对话，而是持久化在知识库里——这解决了企业 AI 最大的痛点：AI 不了解公司背景。</p>
+          <p><span class="tag tag-green">商业逻辑</span>Notion AI 上线 2 个月 ARR 新增超 1000 万美元，4 个月用户突破 400 万。AI 不是独立产品，而是把用户锁在 Notion 生态的"护城河"——这是"AI 是功能而非产品"的最佳诠释。</p>
+        </div>
+        <div class="article-source">来源：Notion 官方发布 / 少数派分析 · <a href="https://www.notion.com/releases/2025-09-18" target="_blank">阅读原文 →</a></div>
+      </div>
+
+      <div class="keypoints">
+        <div class="keypoints-title">🔑 金融 PM 的借鉴视角</div>
+        <div class="keypoint">
+          <div class="keypoint-dot"></div>
+          <div class="keypoint-text"><strong>Notion 的"记忆库" = 你的"客户画像"</strong>：你做过的智能营销系统（客群筛选+旅程经营），本质和 Notion Agent 的记忆机制一样——让 AI 在长周期内保持对用户的理解。这是可迁移的产品设计经验。</div>
+        </div>
+        <div class="keypoint">
+          <div class="keypoint-dot"></div>
+          <div class="keypoint-text"><strong>AI 应该嵌入工作流，而不是独立窗口</strong>：Notion AI 不要求用户跳到另一个 Tab，而是在原有场景内触发——你的坐席辅助也是这个逻辑，但可以更进一步思考"主动推送"和"被动等待"的边界。</div>
+        </div>
+        <div class="keypoint">
+          <div class="keypoint-dot"></div>
+          <div class="keypoint-text"><strong>MCP 生态构建是产品壁垒</strong>：Notion 接入了 Lovable、Perplexity、HubSpot 等 MCP 合作伙伴，让 AI 能跨系统完成任务。银行的 AI 产品也可以思考：如何通过 MCP 打通行内各系统，让 Agent 真正端到端完成业务。</div>
+        </div>
+      </div>
+
+      <div class="reflection-block">
+        <div class="reflection-label">💭 今日思考题</div>
+        <div class="reflection-q">Notion Agent 靠"记忆库"让 AI 了解公司上下文。你的银行智能客服系统里，有没有类似的"持久上下文"机制？如果没有，这是一个值得做的方向吗？有哪些合规风险？</div>
+        <textarea class="reflection-input" id="reflect-day2" placeholder="在这里写下你的思考...（会自动保存）" oninput="saveReflect('day2', this.value)"></textarea>
+      </div>
+
+      <div class="check-row">
+        <span style="font-size:12px;color:var(--muted);">预计耗时 30 分钟</span>
+        <button class="check-btn" id="btn-day2" onclick="markDone('day2')">标记完成 ✓</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- DAY 3 -->
+  <div class="day-card" id="card-day3">
+    <div class="day-header" onclick="toggleCard('day3')">
+      <div class="day-label">
+        <span class="day-num">DAY 3</span>
+        <span class="day-title">用 LLM 视角重新表达你的经历</span>
+      </div>
+      <span class="day-status pending" id="status-day3">待完成</span>
+    </div>
+    <div class="day-body" id="body-day3">
+      <div class="article-block">
+        <div class="article-meta">✍️ 输出训练 · 今日任务</div>
+        <div class="article-title">把你的项目经历翻译成 AI 原生语言</div>
+        <div class="article-summary">
+          <p>你的简历已经很好，但还可以用 2025 年的 AI 语言体系重新表达，让 AI 原生公司的面试官一眼看出你懂大模型时代的产品逻辑。</p>
+          <p><span class="tag tag-red">对照练习</span>以下是一个"旧表达 → 新表达"的示例框架：</p>
+          <p>❌ 旧表达："基于 BERT/NLP 定义了 14 个业务意图分类，准确率从 35% 提升至 85%"</p>
+          <p>✅ 新表达："设计了一个 3 层 Intent Agent：（1）流式 ASR 实时转写；（2）微调 BERT 做 14 分类意图路由；（3）低置信度时触发人机协同兜底。通过 Badcase 驱动的数据飞轮，将意图准确率从 35% → 85%，并建立了持续迭代的评估体系。"</p>
+          <p><span class="tag tag-blue">关键差异</span>新表达体现了：架构思维（3 层设计）、数据闭环意识（数据飞轮）、Agent 范式理解（工具调用+兜底策略）。这些是 AI 原生 PM 最看重的思维方式。</p>
+        </div>
+      </div>
+
+      <div class="keypoints">
+        <div class="keypoints-title">🔑 你的 3 个可重新表达的项目亮点</div>
+        <div class="keypoint">
+          <div class="keypoint-dot"></div>
+          <div class="keypoint-text"><strong>坐席辅助中的 RAG</strong>：你搭建的"话术地图"推荐 = 早期 RAG 系统。可以表达为："设计了基于向量数据库的 Retrieval-Augmented Generation 系统，根据实时对话上下文动态检索最优应答策略，覆盖 XX 个业务场景。"</div>
+        </div>
+        <div class="keypoint">
+          <div class="keypoint-dot"></div>
+          <div class="keypoint-text"><strong>RPA+AI 项目</strong>：这是 Agentic Workflow 的早期实践。可以表达为："主导设计 RPA+LLM 混合 Agent，以 OCR+NLP 作为感知层，规则引擎作为决策层，RPA 作为执行层，构建端到端自动化工作流。"</div>
+        </div>
+        <div class="keypoint">
+          <div class="keypoint-dot"></div>
+          <div class="keypoint-text"><strong>国产化迁移中的配置平台化</strong>：你把 IVR/话术/路由抽象为可视化配置中台，这是"AI 策略快速实验底座"，可以表达为："构建了 AI 策略配置平台，支持千人千面路由策略的动态热更新和灰度实验，降低算法迭代的工程耦合度。"</div>
+        </div>
+      </div>
+
+      <div class="reflection-block">
+        <div class="reflection-label">✍️ 今日输出任务（重要！）</div>
+        <div class="reflection-q">选择你简历中的任意一个项目，用"AI 原生语言"重写 2-3 句核心描述，体现架构层次感和数据闭环思维。写完可以发给我点评。</div>
+        <textarea class="reflection-input" id="reflect-day3" placeholder="在这里写下你的新版项目描述..." oninput="saveReflect('day3', this.value)" style="min-height:120px;"></textarea>
+      </div>
+
+      <div class="check-row">
+        <span style="font-size:12px;color:var(--muted);">预计耗时 20 分钟</span>
+        <button class="check-btn" id="btn-day3" onclick="markDone('day3')">标记完成 ✓</button>
+      </div>
+    </div>
+  </div>
+
+
+</div>
+
+<!-- ============= INTERVIEW TAB ============= -->
+<div class="tab-panel content" id="tab-interview">
+  <div class="section-hd">
+    <h2>每日面经题</h2>
+    <div class="section-hd-line"></div>
+    <span style="font-family:'Space Mono',monospace;font-size:10px;color:var(--muted);">每天2道 · 同步飞书</span>
+  </div>
+  <div id="interview-container"></div>
+</div>
+
+<div class="tab-panel content" id="tab-weekly">
+
+  <div class="section-hd">
+    <h2>周目标</h2>
+    <div class="section-hd-line"></div>
+    <span style="font-family:'Space Mono',monospace;font-size:10px;color:var(--muted);">每周一个具体产出</span>
+  </div>
+
+  <div class="weekly-block">
+    <div class="weekly-label">📌 第 1 周目标</div>
+    <div class="weekly-title">写一篇：银行智能客服的 RAG 落地踩坑实录</div>
+    <div class="weekly-desc">你在坐席辅助项目中用 RAG 搭建了话术推荐系统，这段经历是外部 AI PM 没有的第一手经验。把它写成文章，发布在公众号/知乎/即刻，一篇好的行业文章能让你在圈子里被看见。</div>
+    <button class="weekly-check-btn" id="weekly-btn-1" onclick="toggleWeekly(1)">标记完成</button>
+  </div>
+
+  <div style="height:16px;"></div>
+
+  <div class="weekly-block" style="background:var(--card-bg);color:var(--ink);border:1px solid var(--border);">
+    <div class="weekly-label" style="color:var(--muted);">📌 第 2 周目标</div>
+    <div class="weekly-title">整理你的 AI 产品方法论框架图</div>
+    <div class="weekly-desc" style="color:var(--muted);">把你 4 年积累的 AI 产品工作方法（需求挖掘→算法需求转化→数据闭环→Badcase 分析）做成一张可视化框架图，用于面试时白板讲解。</div>
+    <button class="weekly-check-btn" id="weekly-btn-2" onclick="toggleWeekly(2)" style="border-color:var(--muted);color:var(--muted);">标记完成</button>
+  </div>
+
+  <div style="height:16px;"></div>
+
+  <div class="weekly-block" style="background:var(--card-bg);color:var(--ink);border:1px solid var(--border);">
+    <div class="weekly-label" style="color:var(--muted);">📌 第 3 周目标</div>
+    <div class="weekly-title">投递 3 家目标公司，复盘 JD Gap</div>
+    <div class="weekly-desc" style="color:var(--muted);">选 3 家你想去的公司（互联网/AI 原生/大厂 AI 部门），对照 JD 找到你的能力 Gap，制定针对性补足计划。</div>
+    <button class="weekly-check-btn" id="weekly-btn-3" onclick="toggleWeekly(3)" style="border-color:var(--muted);color:var(--muted);">标记完成</button>
+  </div>
+
+  <div style="height:16px;"></div>
+
+  <div class="weekly-block" style="background:var(--card-bg);color:var(--ink);border:1px solid var(--border);">
+    <div class="weekly-label" style="color:var(--muted);">📌 第 4 周目标</div>
+    <div class="weekly-title">模拟回答：用 Agent 重设计坐席辅助</div>
+    <div class="weekly-desc" style="color:var(--muted);">准备一道高频面试题的完整答案：「如果今天用 LLM Agent 重新设计你的坐席辅助系统，你会怎么做？有哪些坑？」</div>
+    <button class="weekly-check-btn" id="weekly-btn-4" onclick="toggleWeekly(4)" style="border-color:var(--muted);color:var(--muted);">标记完成</button>
+  </div>
+
+</div>
+
+<script>
+  // ── 飞书配置 ──────────────────────────────────────────
+  const FEISHU = {
+    appId:     'cli_a9248a4017f8dcb3',
+    appSecret: 'QRvizCMMWPQlPuBvVVqa9cKkq0FqCkwH',
+    baseId:    'KiBzbaG9patb0isx4oGcUbPWnOe',
+    tableId:   'tblX1j2AaKiDalFp',
+    interviewTableId: 'tblrik3BihWl2tIt',
+  };
+
+  // ── 代理列表（依次尝试） ───────────────────────────────
+  const PROXIES = [
+    'https://corsproxy.io/?url=',
+    'https://proxy.cors.sh/',
+    'https://thingproxy.freeboard.io/fetch/',
+  ];
+  let currentProxy = 0;
+
+  async function fetchWithProxy(targetUrl, opts) {
+    for (let i = 0; i < PROXIES.length; i++) {
+      const proxy = PROXIES[(currentProxy + i) % PROXIES.length];
+      try {
+        const res = await fetch(proxy + encodeURIComponent(targetUrl), opts);
+        if (res.ok || res.status < 500) {
+          currentProxy = (currentProxy + i) % PROXIES.length;
+          return res;
+        }
+      } catch(e) { continue; }
+    }
+    throw new Error('all proxies failed');
+  }
+
+  // ── 面经题库 ──────────────────────────────────────────
+  const QUESTIONS = [
+    {
+      id: 'q1', num: 1, category: 'AI技术实操及AI知识面',
+      title: '你了解国内哪些底座大模型？各自能力优势和区别是什么？',
+      framework: '① 列举主流模型（豆包/文心/讯飞/通义/DeepSeek/智谱）\n② 各自能力项对比（生成/推理/语音/代码）\n③ 收敛到金融场景：哪家更适合客服/营销/合规\n④ 护城河分析：数据飞轮 vs 生态绑定',
+      reference: '• DeepSeek：开源，数学/代码推理强，成本极低，国际影响力最大，金融量化分析有优势\n• 通义千问：长文本最强（100万token），适合金融报告/合同分析，阿里云生态绑定\n• 文心一言：搜索+知识融合，资讯类场景好，专业领域深度稍弱\n• 讯飞星火：语音能力最强（ASR/TTS），金融客服/坐席辅助首选\n• 智谱GLM：多模态+AutoGLM智能体，复杂任务规划能力强\n\n金融场景选型：客服→讯飞；长文档→通义；Agent→智谱；成本敏感→DeepSeek\n护城河本质：真正壁垒在数据飞轮和生态绑定，纯模型能力护城河低',
+      knowledge: '大模型能力评测维度 · 开源vs闭源策略 · 数据飞轮 · 金融垂直场景选型 · 模型护城河分析'
+    },
+    {
+      id: 'q2', num: 2, category: 'AI技术实操及AI知识面',
+      title: '大模型微调和RAG各自有什么优缺点？你在项目中如何选择？',
+      framework: '① RAG优缺点\n② 微调优缺点\n③ 选型决策树（知识更新频率/合规要求/成本）\n④ 结合自己的坐席辅助RAG项目经验举例',
+      reference: 'RAG优点：知识实时更新、成本低、可溯源、合规友好\nRAG缺点：检索质量依赖向量化、多跳推理弱、召回噪声影响生成\n\n微调优点：行为风格固化、垂直术语理解准确、推理稳定\n微调缺点：成本高、知识更新需重训、灾难性遗忘风险\n\n我的实践：坐席辅助选RAG，因为银行话术每季度更新，微调维护成本极高；金融场景需要答案可溯源，RAG天然满足合规要求',
+      knowledge: 'RAG架构原理 · 向量数据库 · Fine-tuning · 知识更新策略 · 金融合规选型'
+    },
+    {
+      id: 'q3', num: 3, category: 'AI技术实操及AI知识面',
+      title: '微调的数据质量标准是如何制定的？你有哪些实践经验？',
+      framework: '① 数据质量的核心维度（准确性/多样性/覆盖率/标注一致性）\n② 标注规范制定流程\n③ Badcase分析如何反哺数据质量\n④ 结合你的意图识别标注经验',
+      reference: '数据质量核心维度：\n• 准确性：标注结果与业务定义一致\n• 多样性：覆盖各种表达方式和边界case\n• 覆盖率：各意图类别数据均衡，避免长尾\n• 一致性：多标注员结果一致，需计算Kappa系数\n\n标注规范制定：先定义标注指南→小批量试标→计算一致性→迭代优化指南→正式标注\n\nBadcase反哺：线上识别错误→分析错误类型→补充对应训练数据→重训模型→验证提升',
+      knowledge: '数据标注规范 · Kappa系数 · Badcase分析 · 数据飞轮 · 意图识别训练'
+    },
+    {
+      id: 'q4', num: 4, category: 'AI技术实操及AI知识面',
+      title: 'RAG pipeline的流程你了解哪些？有哪些优化手段？',
+      framework: '① 标准RAG流程（文档处理→向量化→检索→生成）\n② 检索优化（稠密/稀疏/混合检索）\n③ 生成优化（Reranker/上下文压缩）\n④ 结合你的话术推荐系统经验',
+      reference: '标准RAG流程：\n文档切片→Embedding向量化→存入向量库→用户Query向量化→相似度检索→召回片段+Prompt→LLM生成\n\n优化手段：\n• 检索侧：混合检索（BM25+向量）提升召回；Query改写扩展语义\n• 排序侧：Reranker精排，过滤低相关结果\n• 生成侧：上下文压缩减少token；Few-shot示例引导格式\n• 数据侧：文档切片策略（按语义而非固定长度）\n\n我的实践：坐席辅助中用上下文关联机制，根据对话进展动态调整检索query，提升话术匹配准确率',
+      knowledge: 'RAG pipeline · Embedding · 向量数据库 · BM25 · Reranker · Query改写 · 上下文压缩'
+    }
+  ];
+
+  // 今日面经题（每天2道，按序轮换）
+  function getTodayQuestions() {
+    const start = new Date('2026-03-10');
+    const today = new Date(todayStr);
+    const dayIndex = Math.floor((today - start) / 86400000);
+    const startQ = (dayIndex * 2) % QUESTIONS.length;
+    return [
+      QUESTIONS[startQ % QUESTIONS.length],
+      QUESTIONS[(startQ + 1) % QUESTIONS.length]
+    ];
+  }
+
+  // ── 日期 ──────────────────────────────────────────────
+  const now = new Date();
+  const opts = { year: 'numeric', month: 'long', day: 'numeric', weekday: 'long' };
+  document.getElementById('dateBadge').textContent = now.toLocaleDateString('zh-CN', opts);
+  const todayStr = now.toISOString().slice(0, 10);
+
+  // ── 本地缓存（离线兜底） ──────────────────────────────
+  function lsave(key, val) { try { localStorage.setItem('aipm_' + key, JSON.stringify(val)); } catch(e){} }
+  function lload(key, def) { try { const v = localStorage.getItem('aipm_' + key); return v !== null ? JSON.parse(v) : def; } catch(e){ return def; } }
+
+  let state = lload('state', { done: {}, reflections: {}, exercises: {}, weekly: {} });
+  let dayDone = lload('dayDone', []);
+  let token = null;
+  let syncTimeout = null;
+  // 从本地缓存恢复今日 record_id，防止重复写入
+  let todayRecordId = lload('recordId_' + todayStr, null);
+
+  // ── 同步状态指示器 ────────────────────────────────────
+  function setSyncStatus(status, msg) {
+    const el = document.getElementById('syncStatus');
+    if (!el) return;
+    const colors = { syncing: '#d4a843', ok: '#3a7d44', err: '#c84b2f', offline: '#8a7d6e' };
+    el.style.color = colors[status] || '#8a7d6e';
+    el.textContent = msg;
+  }
+
+  // ── 获取飞书 Token ─────────────────────────────────────
+  async function getToken() {
+    if (token) return token;
+    try {
+      const targetUrl = 'https://open.feishu.cn/open-apis/auth/v3/tenant_access_token/internal';
+      const res = await fetchWithProxy(targetUrl, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ app_id: FEISHU.appId, app_secret: FEISHU.appSecret })
+      });
+      const data = await res.json();
+      if (data.tenant_access_token) {
+        token = data.tenant_access_token;
+        setTimeout(() => { token = null; }, 110 * 60 * 1000);
+        return token;
+      }
+    } catch(e) { console.error('Token获取失败', e); }
+    return null;
+  }
+
+  // ── 飞书 API 请求封装 ──────────────────────────────────
+  async function feishuAPI(method, path, body) {
+    const tk = await getToken();
+    if (!tk) throw new Error('no token');
+    const targetUrl = 'https://open.feishu.cn/open-apis' + path;
+    const opts = {
+      method,
+      headers: { 'Authorization': 'Bearer ' + tk, 'Content-Type': 'application/json' }
+    };
+    if (body) opts.body = JSON.stringify(body);
+    const res = await fetchWithProxy(targetUrl, opts);
+    return res.json();
+  }
+
+  // ── 查询今日记录 ──────────────────────────────────────
+  async function fetchTodayRecord() {
+    try {
+      const path = `/bitable/v1/apps/${FEISHU.baseId}/tables/${FEISHU.tableId}/records`;
+      // 飞书日期字段用毫秒时间戳，查今天的范围：今日 00:00 ~ 23:59
+      const startTs = new Date(todayStr + 'T00:00:00+08:00').getTime();
+      const endTs   = new Date(todayStr + 'T23:59:59+08:00').getTime();
+      const filter  = `AND(CurrentValue.[日期]>=${startTs},CurrentValue.[日期]<=${endTs})`;
+      const data = await feishuAPI('GET', path + `?filter=${encodeURIComponent(filter)}`);
+      if (data.data && data.data.items && data.data.items.length > 0) {
+        const rec = data.data.items[0];
+        todayRecordId = rec.record_id;
+        return rec.fields;
+      }
+    } catch(e) {}
+    return null;
+  }
+
+  // ── 各任务对应的文章链接 ─────────────────────────────
+  const ARTICLE_LINKS = {
+    day1: 'https://simonwillison.net/2025/Dec/31/the-year-in-llms/',
+    day2: 'https://www.notion.com/releases/2025-09-18',
+    day3: ''
+  };
+
+  // ── 构建每日打卡字段 ──────────────────────────────────
+  function buildFields() {
+    const doneTasks = Object.keys(state.done).filter(k => state.done[k]);
+    const links = doneTasks.filter(id => ARTICLE_LINKS[id]).map(id => ARTICLE_LINKS[id]).join('\n');
+    const reflectionText = ['day1','day2','day3']
+      .filter(id => state.reflections[id])
+      .map(id => `[${id}] ${state.reflections[id]}`)
+      .join('\n\n');
+    const dateTs = new Date(todayStr + 'T00:00:00+08:00').getTime();
+    const fields = {
+      '日期': dateTs,
+      '任务ID': doneTasks.join(',') || '未打卡',
+      '是否完成': doneTasks.length > 0,
+    };
+    if (reflectionText) fields['思考内容'] = reflectionText;
+    if (links) fields['文章链接'] = links;
+    return fields;
+  }
+
+  // ── 同步面经答案到面经表 ──────────────────────────────
+  let interviewRecordIds = lload('interviewRecordIds_' + todayStr, {});
+
+  async function syncInterviewAnswer(qid) {
+    const q = QUESTIONS.find(x => x.id === qid);
+    if (!q) return;
+    const myAnswer = state.reflections[qid] || '';
+    const aiComment = state.aiComments && state.aiComments[qid] ? state.aiComments[qid] : '';
+    const dateTs = new Date(todayStr + 'T00:00:00+08:00').getTime();
+    const fields = {
+      '日期': dateTs,
+      '题目编号': q.num,
+      '题目类别': q.category,
+      '题目内容': q.title,
+      '答题思路': q.framework,
+      '参考答案': q.reference,
+      '知识点': q.knowledge,
+    };
+    if (myAnswer) fields['我的答案'] = myAnswer;
+    if (aiComment) fields['AI点评'] = aiComment;
+
+    const basePath = `/bitable/v1/apps/${FEISHU.baseId}/tables/${FEISHU.interviewTableId}/records`;
+    try {
+      // 没有 recordId 时先查飞书，防止重复写入
+      if (!interviewRecordIds[qid]) {
+        try {
+          const startTs = new Date(todayStr + 'T00:00:00+08:00').getTime();
+          const endTs   = new Date(todayStr + 'T23:59:59+08:00').getTime();
+          const filter  = `AND(CurrentValue.[日期]>=${startTs},CurrentValue.[日期]<=${endTs},CurrentValue.[题目编号]=${q.num})`;
+          const data = await feishuAPI('GET', `${basePath}?filter=${encodeURIComponent(filter)}`);
+          if (data.data && data.data.items && data.data.items.length > 0) {
+            interviewRecordIds[qid] = data.data.items[0].record_id;
+            lsave('interviewRecordIds_' + todayStr, interviewRecordIds);
+          }
+        } catch(e) {}
+      }
+
+      if (interviewRecordIds[qid]) {
+        const res = await feishuAPI('PUT', `${basePath}/${interviewRecordIds[qid]}`, { fields });
+        if (res.code === 1254043 || res.code === 1254040) {
+          interviewRecordIds[qid] = null;
+          const r2 = await feishuAPI('POST', basePath, { fields });
+          if (r2.data && r2.data.record) {
+            interviewRecordIds[qid] = r2.data.record.record_id;
+            lsave('interviewRecordIds_' + todayStr, interviewRecordIds);
+          }
+        }
+      } else {
+        const res = await feishuAPI('POST', basePath, { fields });
+        if (res.data && res.data.record) {
+          interviewRecordIds[qid] = res.data.record.record_id;
+          lsave('interviewRecordIds_' + todayStr, interviewRecordIds);
+        }
+      }
+    } catch(e) { console.error('面经同步失败', e); }
+  }
+
+  // ── 同步到飞书（防抖 1.5s） ───────────────────────────
+  function scheduleSync(interviewQid) {
+    setSyncStatus('syncing', '同步中...');
+    clearTimeout(syncTimeout);
+    syncTimeout = setTimeout(() => {
+      syncToFeishu();
+      if (interviewQid) syncInterviewAnswer(interviewQid);
+    }, 1500);
+  }
+
+  async function syncToFeishu() {
+    lsave('state', state);
+    lsave('dayDone', dayDone);
+    setSyncStatus('syncing', '同步中...');
+    try {
+      const fields = buildFields();
+      const basePath = `/bitable/v1/apps/${FEISHU.baseId}/tables/${FEISHU.tableId}/records`;
+      let res;
+
+      // 没有 recordId 时先查一次飞书，防止重复写入
+      if (!todayRecordId) {
+        await fetchTodayRecord();
+      }
+
+      if (todayRecordId) {
+        res = await feishuAPI('PUT', `${basePath}/${todayRecordId}`, { fields });
+        if (res.code === 1254043 || res.code === 1254040) {
+          todayRecordId = null;
+          lsave('recordId_' + todayStr, null);
+          res = await feishuAPI('POST', basePath, { fields });
+          if (res.data && res.data.record) {
+            todayRecordId = res.data.record.record_id;
+            lsave('recordId_' + todayStr, todayRecordId);
+          }
+        }
+      } else {
+        res = await feishuAPI('POST', basePath, { fields });
+        if (res.data && res.data.record) {
+          todayRecordId = res.data.record.record_id;
+          lsave('recordId_' + todayStr, todayRecordId);
+        }
+      }
+      if (res && res.code !== undefined && res.code !== 0) {
+        setSyncStatus('err', `同步失败 code:${res.code}`);
+      } else {
+        setSyncStatus('ok', '已同步 ✓');
+      }
+    } catch(e) {
+      console.error('[飞书同步] 异常：', e);
+      setSyncStatus('err', '同步失败，已本地保存');
+    }
+  }
+
+  // ── 从飞书加载今日数据 ────────────────────────────────
+  async function loadFromFeishu() {
+    setSyncStatus('syncing', '加载云端数据...');
+    try {
+      const fields = await fetchTodayRecord();
+      if (fields) {
+        // 保存 record_id 防止重复写入
+        lsave('recordId_' + todayStr, todayRecordId);
+        // 解析任务完成状态
+        if (fields['任务ID'] && fields['任务ID'] !== '-') {
+          fields['任务ID'].split(',').forEach(id => { if (id) state.done[id.trim()] = true; });
+        }
+        // 解析思考内容
+        if (fields['思考内容'] && fields['思考内容'] !== '-') {
+          const parts = fields['思考内容'].split('\n\n');
+          parts.forEach(p => {
+            const m = p.match(/^\[(\w+)\]\s*([\s\S]+)/);
+            if (m) state.reflections[m[1]] = m[2].trim();
+          });
+        }
+        // 文章链接字段无需恢复到 state，固定在 ARTICLE_LINKS 里
+        lsave('state', state);
+        setSyncStatus('ok', '云端数据已加载 ✓');
+      } else {
+        setSyncStatus('ok', '今日无记录，开始打卡吧');
+      }
+      renderState();
+    } catch(e) {
+      setSyncStatus('offline', '离线模式（本地数据）');
+      renderState();
+    }
+  }
+
+  // ── 渲染 UI ───────────────────────────────────────────
+  function renderState() {
+    // 学习任务（只有 day1/2/3）
+    ['day1','day2','day3'].forEach(id => {
+      const statusEl = document.getElementById('status-' + id);
+      const btn = document.getElementById('btn-' + id);
+      if (!statusEl || !btn) return;
+      if (state.done[id]) {
+        statusEl.textContent = '已完成 ✓';
+        statusEl.className = 'day-status done';
+        btn.classList.add('checked');
+        btn.textContent = '撤销完成';
+        btn.onclick = () => cancelDone(id);
+      } else {
+        btn.onclick = () => markDone(id);
+      }
+      if (state.reflections[id]) {
+        const el = document.getElementById('reflect-' + id);
+        if (el) el.value = state.reflections[id];
+      }
+    });
+    // 周目标
+    [1,2,3,4].forEach(n => {
+      const btn = document.getElementById('weekly-btn-' + n);
+      if (btn && state.weekly[n]) {
+        btn.classList.add('done');
+        btn.textContent = '已完成 ✓';
+      }
+    });
+    updateProgress();
+    renderStreak();
+  }
+
+  // ── 打卡连续天数 ──────────────────────────────────────
+  function renderStreak() {
+    const streakRow = document.getElementById('streakRow');
+    streakRow.innerHTML = '';
+    for (let i = 20; i >= 0; i--) {
+      const d = new Date(now); d.setDate(d.getDate() - i);
+      const ds = d.toISOString().slice(0, 10);
+      const dot = document.createElement('div');
+      dot.className = 'streak-dot' + (ds === todayStr ? ' today' : '') + (dayDone.includes(ds) ? ' done' : '');
+      dot.textContent = d.getDate();
+      streakRow.appendChild(dot);
+    }
+  }
+
+  // ── Tab 切换 ──────────────────────────────────────────
+  function switchTab(name) {
+    document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+    document.getElementById('tab-' + name).classList.add('active');
+    event.target.classList.add('active');
+  }
+
+  function toggleCard(id) {
+    document.getElementById('body-' + id).classList.toggle('open');
+  }
+
+  // Mark done
+  function markDone(id) {
+    state.done[id] = true;
+    document.getElementById('status-' + id).textContent = '已完成 ✓';
+    document.getElementById('status-' + id).className = 'day-status done';
+    const btn = document.getElementById('btn-' + id);
+    btn.classList.add('checked');
+    btn.textContent = '撤销完成';
+    btn.onclick = () => cancelDone(id);
+    updateProgress();
+    if (state.done['day1'] && state.done['day2'] && state.done['day3']) {
+      if (!dayDone.includes(todayStr)) { dayDone.push(todayStr); }
+    }
+    scheduleSync();
+  }
+
+  function cancelDone(id) {
+    state.done[id] = false;
+    document.getElementById('status-' + id).textContent = '待完成';
+    document.getElementById('status-' + id).className = 'day-status pending';
+    const btn = document.getElementById('btn-' + id);
+    btn.classList.remove('checked');
+    btn.textContent = '标记完成 ✓';
+    btn.onclick = () => markDone(id);
+    // 移除今日连续打卡记录
+    const idx = dayDone.indexOf(todayStr);
+    if (idx > -1) dayDone.splice(idx, 1);
+    updateProgress();
+    renderStreak();
+    scheduleSync();
+  }
+
+  function saveReflect(id, val) {
+    state.reflections[id] = val;
+    scheduleSync();
+  }
+
+  function toggleEx(id) {
+    state.exercises[id] = !state.exercises[id];
+    const el = document.getElementById('ex-' + id);
+    if (state.exercises[id]) { el.classList.add('checked'); el.textContent = '✓'; }
+    else { el.classList.remove('checked'); el.textContent = ''; }
+    updateProgress();
+    scheduleSync();
+  }
+
+  function toggleWeekly(n) {
+    state.weekly[n] = !state.weekly[n];
+    const btn = document.getElementById('weekly-btn-' + n);
+    btn.classList.toggle('done', state.weekly[n]);
+    btn.textContent = state.weekly[n] ? '已完成 ✓' : '标记完成';
+    scheduleSync();
+  }
+
+  function updateProgress() {
+    const learnDone = ['day1','day2','day3'].filter(d => state.done[d]).length;
+    const interviewDone = state.done['interview'] ? 1 : 0;
+    const total = 4;
+    const done = learnDone + interviewDone;
+    document.getElementById('mainProgress').style.width = (done / total * 100) + '%';
+    document.getElementById('progressText').textContent = done + ' / ' + total + ' 完成';
+  }
+
+  // ── 渲染面经题 ────────────────────────────────────────
+  function renderInterview() {
+    const qs = getTodayQuestions();
+    const container = document.getElementById('interview-container');
+    if (!container) return;
+    container.innerHTML = qs.map((q, i) => `
+      <div class="day-card" style="margin-bottom:24px;">
+        <div class="day-header" onclick="this.nextElementSibling.classList.toggle('open')">
+          <div class="day-label">
+            <span class="day-num" style="color:#9b59b6;background:rgba(155,89,182,0.08);">题目 ${String(i+1).padStart(2,'0')}</span>
+            <span class="day-title" style="font-size:14px;">${q.title}</span>
+          </div>
+          <span style="font-family:'Space Mono',monospace;font-size:9px;color:#9b59b6;letter-spacing:1px;">${q.category}</span>
+        </div>
+        <div class="day-body ${i===0?'open':''}">
+          <div class="keypoints">
+            <div class="keypoints-title">📌 答题框架</div>
+            ${q.framework.split('\n').map(f => `<div class="keypoint"><div class="keypoint-dot" style="background:#9b59b6;"></div><div class="keypoint-text">${f.replace(/^[①②③④]/,'').trim()}</div></div>`).join('')}
+          </div>
+
+          <div class="reflection-block" style="background:rgba(155,89,182,0.03);border-color:rgba(155,89,182,0.2);">
+            <div class="reflection-label" style="color:#9b59b6;">✍️ 我的答案</div>
+            <textarea class="reflection-input" id="reflect-${q.id}" placeholder="先写出来，不求完美，3-5分钟..." oninput="saveInterviewAnswer('${q.id}', this.value)" style="min-height:120px;">${state.reflections[q.id]||''}</textarea>
+          </div>
+
+          <details style="margin-top:16px;">
+            <summary style="font-family:'Space Mono',monospace;font-size:11px;color:#9b59b6;cursor:pointer;letter-spacing:1px;">📖 查看参考答案</summary>
+            <div style="margin-top:12px;padding:16px;background:rgba(155,89,182,0.04);border-radius:2px;font-size:13px;line-height:1.9;color:#3a3028;">
+              ${q.reference.split('\n').map(l => `<p>${l}</p>`).join('')}
+            </div>
+          </details>
+
+          <div style="margin-top:14px;padding:12px 16px;background:rgba(212,168,67,0.06);border:1px solid rgba(212,168,67,0.2);border-radius:2px;">
+            <div style="font-family:'Space Mono',monospace;font-size:10px;color:var(--gold);letter-spacing:1px;margin-bottom:6px;">🔑 知识点</div>
+            <div style="font-size:12px;color:#3a3028;line-height:1.8;">${q.knowledge}</div>
+          </div>
+        </div>
+      </div>
+    `).join('') + `
+      <div class="check-row" style="margin-top:8px;">
+        <span style="font-size:12px;color:var(--muted);">预计耗时 30 分钟</span>
+        <button class="check-btn" id="btn-interview" onclick="markInterviewDone()">标记完成 ✓</button>
+      </div>`;
+
+    // 恢复完成状态
+    if (state.done['interview']) {
+      const btn = document.getElementById('btn-interview');
+      if (btn) { btn.classList.add('checked'); btn.textContent = '撤销完成'; btn.onclick = cancelInterviewDone; }
+    }
+  }
+
+  function saveInterviewAnswer(qid, val) {
+    state.reflections[qid] = val;
+    scheduleSync(qid);
+  }
+
+  function markInterviewDone() {
+    state.done['interview'] = true;
+    const btn = document.getElementById('btn-interview');
+    if (btn) { btn.classList.add('checked'); btn.textContent = '撤销完成'; btn.onclick = cancelInterviewDone; }
+    // 同步两道题到面经表
+    getTodayQuestions().forEach(q => syncInterviewAnswer(q.id));
+    scheduleSync();
+    updateProgress();
+  }
+
+  async function deleteInterviewRecord(qid) {
+    const recordId = interviewRecordIds[qid];
+    if (!recordId) return;
+    try {
+      const basePath = `/bitable/v1/apps/${FEISHU.baseId}/tables/${FEISHU.interviewTableId}/records`;
+      await feishuAPI('DELETE', `${basePath}/${recordId}`);
+      interviewRecordIds[qid] = null;
+      lsave('interviewRecordIds_' + todayStr, interviewRecordIds);
+    } catch(e) { console.error('面经删除失败', e); }
+  }
+
+  function cancelInterviewDone() {
+    state.done['interview'] = false;
+    const btn = document.getElementById('btn-interview');
+    if (btn) { btn.classList.remove('checked'); btn.textContent = '标记完成 ✓'; btn.onclick = markInterviewDone; }
+    // 删除飞书面经表中今日两条记录
+    setSyncStatus('syncing', '同步中...');
+    Promise.all(getTodayQuestions().map(q => deleteInterviewRecord(q.id)))
+      .then(() => setSyncStatus('ok', '已同步 ✓'))
+      .catch(() => setSyncStatus('err', '删除失败'));
+    scheduleSync();
+    updateProgress();
+  }
+
+  // ── 固定 header 高度计算 ──────────────────────────────
+  function adjustLayout() {
+    const header = document.querySelector('.header');
+    const tabNav = document.querySelector('.tab-nav');
+    if (!header || !tabNav) return;
+    const headerH = header.offsetHeight;
+    const tabH = tabNav.offsetHeight;
+    document.documentElement.style.setProperty('--header-h', headerH + 'px');
+    tabNav.style.top = headerH + 'px';
+    document.body.style.paddingTop = (headerH + tabH) + 'px';
+  }
+  window.addEventListener('resize', adjustLayout);
+
+  // ── 启动 ─────────────────────────────────────────────
+  renderState();
+  renderInterview();
+  adjustLayout();
+  const dayOfCycle = ((now.getDay() + 6) % 3) + 1;
+  toggleCard('day' + dayOfCycle);
+  loadFromFeishu();
+</script>
+</body>
+</html>
