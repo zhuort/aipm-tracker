@@ -1,3 +1,6 @@
+
+
+```html
 <!DOCTYPE html>
 <html lang="zh-CN">
 <head>
@@ -267,20 +270,6 @@
     margin-bottom: 10px;
   }
 
-  .article-source {
-    font-family: 'Space Mono', monospace;
-    font-size: 10px;
-    color: var(--muted);
-    margin-top: 12px;
-    padding-top: 10px;
-    border-top: 1px dashed var(--border);
-  }
-
-  .article-source a {
-    color: var(--accent);
-    text-decoration: none;
-  }
-
   /* Key points */
   .keypoints {
     margin: 20px 0;
@@ -395,73 +384,6 @@
     background: var(--green);
     border-color: var(--green);
     color: white;
-  }
-
-  /* Exercise card */
-  .exercise-strip {
-    display: flex;
-    gap: 12px;
-    flex-wrap: wrap;
-    margin-top: 8px;
-  }
-
-  .ex-item {
-    flex: 1;
-    min-width: 140px;
-    background: var(--card-bg);
-    border: 1px solid var(--border);
-    padding: 14px 16px;
-    border-radius: 2px;
-  }
-
-  .ex-icon {
-    font-size: 20px;
-    margin-bottom: 6px;
-  }
-
-  .ex-name {
-    font-family: 'Noto Serif SC', serif;
-    font-size: 13px;
-    font-weight: 700;
-    margin-bottom: 2px;
-  }
-
-  .ex-detail {
-    font-size: 11px;
-    color: var(--muted);
-    font-family: 'Space Mono', monospace;
-  }
-
-  .ex-check {
-    margin-top: 10px;
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    cursor: pointer;
-  }
-
-  .ex-checkbox {
-    width: 16px;
-    height: 16px;
-    border: 1.5px solid var(--border);
-    border-radius: 2px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    transition: all 0.15s;
-    flex-shrink: 0;
-  }
-
-  .ex-checkbox.checked {
-    background: var(--green);
-    border-color: var(--green);
-    color: white;
-    font-size: 10px;
-  }
-
-  .ex-check-label {
-    font-size: 11px;
-    color: var(--muted);
   }
 
   /* Weekly goal */
@@ -592,7 +514,7 @@
 <div class="header">
   <div class="header-top">
     <div>
-      <div class="header-title">AI PM 成长计划</div>
+      <div class="header-title"> AI PM 成长计划</div>
       <div class="header-subtitle">Bank PM → AI PM · 每日打卡</div>
     </div>
     <div style="display:flex;flex-direction:column;align-items:flex-end;gap:4px;">
@@ -614,7 +536,6 @@
   <button class="tab-btn" onclick="switchTab('weekly')">📌 周目标</button>
 </div>
 
-<!-- ============= LEARN TAB ============= -->
 <div class="tab-panel active content" id="tab-learn">
 
   <div class="section-hd">
@@ -623,10 +544,8 @@
     <span style="font-family:'Space Mono',monospace;font-size:10px;color:var(--muted);">3天循环</span>
   </div>
 
-  <!-- STREAK -->
   <div class="streak-row" id="streakRow"></div>
 
-  <!-- DAY 1 -->
   <div class="day-card" id="card-day1">
     <div class="day-header" onclick="toggleCard('day1')">
       <div class="day-label">
@@ -636,40 +555,14 @@
       <span class="day-status pending" id="status-day1">待完成</span>
     </div>
     <div class="day-body" id="body-day1">
-      <div class="article-block">
-        <div class="article-meta">📰 推荐阅读 · 前沿资讯</div>
-        <div class="article-title">2025 年 LLM 大事记：Agent 元年正式到来</div>
-        <div class="article-summary">
-          <p><span class="tag tag-blue">背景</span>2025 年是公认的"Agent 元年"。大模型能力从"单轮问答"飞跃到"自主完成多步骤任务"，这一跃迁直接影响你未来做的每一个 AI 产品。</p>
-          <p><span class="tag tag-red">核心进展</span>强化学习（RLVR）成为 2025 年最大的技术突破——模型通过强化学习自发学会"推理"，表现为 DeepSeek R1、OpenAI o3 等推理模型的爆发。能力提升不靠堆模型大小，靠"思考时间"的延长。</p>
-          <p><span class="tag tag-green">Agent 里程碑</span>Claude Code 被视为"第一个真正意义上的 LLM Agent"，它以循环方式将工具调用与推理串联起来，解决复杂问题。MCP（模型上下文协议）在 2025 年爆炸式普及，成为工具调用的事实标准。</p>
-          <p><span class="tag tag-blue">市场格局</span>Anthropic 以 32% 份额成为企业 AI 市场第一，超越 OpenAI（25%）。企业级 Agent 中最热门的场景是客服（这正是你的主战场）和内部效率工具。</p>
-        </div>
-        <div class="article-source">来源：Simon Willison's Weblog / Karpathy 年度回顾 / Menlo Ventures 市场报告 · <a href="https://simonwillison.net/2025/Dec/31/the-year-in-llms/" target="_blank">阅读原文 →</a></div>
+      <div id="day1-content">
+        <div style="padding:24px;text-align:center;color:var(--muted);font-family:'Space Mono',monospace;font-size:11px;letter-spacing:1px;">AI 生成中...</div>
       </div>
-
-      <div class="keypoints">
-        <div class="keypoints-title">🔑 你需要记住的 3 个关键点</div>
-        <div class="keypoint">
-          <div class="keypoint-dot"></div>
-          <div class="keypoint-text"><strong>Agent ≠ 聊天机器人</strong>：Agent 能循环调用工具、自主规划步骤，你过去做的坐席辅助（意图识别→知识推荐→工单填写）其实已经是早期 Agent 形态，面试时要这样表达。</div>
-        </div>
-        <div class="keypoint">
-          <div class="keypoint-dot"></div>
-          <div class="keypoint-text"><strong>MCP 是新基础设施</strong>：就像当年 REST API 统一了接口，MCP 正在统一 AI 工具调用方式。你的下一个产品方案里，可以考虑如何利用 MCP 打通行内系统。</div>
-        </div>
-        <div class="keypoint">
-          <div class="keypoint-dot"></div>
-          <div class="keypoint-text"><strong>质量仍是最大障碍</strong>：调研显示 32% 的团队把"模型输出质量"列为生产部署第一障碍。你在金融场景做 Badcase 分析、A/B Test 的经验，是稀缺的差异化竞争力。</div>
-        </div>
-      </div>
-
       <div class="reflection-block">
         <div class="reflection-label">💭 今日思考题</div>
-        <div class="reflection-q">你的坐席辅助项目（意图识别 → RAG 话术推荐 → 工单 NER）本质上是一个 3 步 Agent。如果今天用 MCP 重新设计这个系统，你会怎么拆解工具调用？</div>
+        <div class="reflection-q" id="day1-reflection-q">加载中...</div>
         <textarea class="reflection-input" id="reflect-day1" placeholder="在这里写下你的思考...（会自动保存）" oninput="saveReflect('day1', this.value)"></textarea>
       </div>
-
       <div class="check-row">
         <span style="font-size:12px;color:var(--muted);">预计耗时 20 分钟</span>
         <button class="check-btn" id="btn-day1" onclick="markDone('day1')">标记完成 ✓</button>
@@ -677,7 +570,6 @@
     </div>
   </div>
 
-  <!-- DAY 2 -->
   <div class="day-card" id="card-day2">
     <div class="day-header" onclick="toggleCard('day2')">
       <div class="day-label">
@@ -687,39 +579,14 @@
       <span class="day-status pending" id="status-day2">待完成</span>
     </div>
     <div class="day-body" id="body-day2">
-      <div class="article-block">
-        <div class="article-meta">🔍 产品拆解 · 今日案例：Notion AI 3.0</div>
-        <div class="article-title">Notion 3.0：从协作工具到 AI 知识工作 Agent</div>
-        <div class="article-summary">
-          <p><span class="tag tag-blue">产品演进</span>Notion 于 2025 年 9 月发布 3.0 版本，把 AI 从"功能"升级为"Agent"——核心差异是：AI 可以代替用户在 Notion 里完成所有操作，包括创建文档、搭建数据库、跨工具搜索，支持连续运行超 20 分钟。</p>
-          <p><span class="tag tag-red">关键设计决策</span>Notion AI Agent 的独特之处在于"记忆库"机制：Agent 能整合用户 Notion 里所有可访问的信息（包括 Slack、Google Drive、GitHub），上下文不依赖单次对话，而是持久化在知识库里——这解决了企业 AI 最大的痛点：AI 不了解公司背景。</p>
-          <p><span class="tag tag-green">商业逻辑</span>Notion AI 上线 2 个月 ARR 新增超 1000 万美元，4 个月用户突破 400 万。AI 不是独立产品，而是把用户锁在 Notion 生态的"护城河"——这是"AI 是功能而非产品"的最佳诠释。</p>
-        </div>
-        <div class="article-source">来源：Notion 官方发布 / 少数派分析 · <a href="https://www.notion.com/releases/2025-09-18" target="_blank">阅读原文 →</a></div>
+      <div id="day2-content">
+        <div style="padding:24px;text-align:center;color:var(--muted);font-family:'Space Mono',monospace;font-size:11px;letter-spacing:1px;">AI 生成中...</div>
       </div>
-
-      <div class="keypoints">
-        <div class="keypoints-title">🔑 金融 PM 的借鉴视角</div>
-        <div class="keypoint">
-          <div class="keypoint-dot"></div>
-          <div class="keypoint-text"><strong>Notion 的"记忆库" = 你的"客户画像"</strong>：你做过的智能营销系统（客群筛选+旅程经营），本质和 Notion Agent 的记忆机制一样——让 AI 在长周期内保持对用户的理解。这是可迁移的产品设计经验。</div>
-        </div>
-        <div class="keypoint">
-          <div class="keypoint-dot"></div>
-          <div class="keypoint-text"><strong>AI 应该嵌入工作流，而不是独立窗口</strong>：Notion AI 不要求用户跳到另一个 Tab，而是在原有场景内触发——你的坐席辅助也是这个逻辑，但可以更进一步思考"主动推送"和"被动等待"的边界。</div>
-        </div>
-        <div class="keypoint">
-          <div class="keypoint-dot"></div>
-          <div class="keypoint-text"><strong>MCP 生态构建是产品壁垒</strong>：Notion 接入了 Lovable、Perplexity、HubSpot 等 MCP 合作伙伴，让 AI 能跨系统完成任务。银行的 AI 产品也可以思考：如何通过 MCP 打通行内各系统，让 Agent 真正端到端完成业务。</div>
-        </div>
-      </div>
-
       <div class="reflection-block">
         <div class="reflection-label">💭 今日思考题</div>
-        <div class="reflection-q">Notion Agent 靠"记忆库"让 AI 了解公司上下文。你的银行智能客服系统里，有没有类似的"持久上下文"机制？如果没有，这是一个值得做的方向吗？有哪些合规风险？</div>
+        <div class="reflection-q" id="day2-reflection-q">加载中...</div>
         <textarea class="reflection-input" id="reflect-day2" placeholder="在这里写下你的思考...（会自动保存）" oninput="saveReflect('day2', this.value)"></textarea>
       </div>
-
       <div class="check-row">
         <span style="font-size:12px;color:var(--muted);">预计耗时 30 分钟</span>
         <button class="check-btn" id="btn-day2" onclick="markDone('day2')">标记完成 ✓</button>
@@ -727,7 +594,6 @@
     </div>
   </div>
 
-  <!-- DAY 3 -->
   <div class="day-card" id="card-day3">
     <div class="day-header" onclick="toggleCard('day3')">
       <div class="day-label">
@@ -737,40 +603,14 @@
       <span class="day-status pending" id="status-day3">待完成</span>
     </div>
     <div class="day-body" id="body-day3">
-      <div class="article-block">
-        <div class="article-meta">✍️ 输出训练 · 今日任务</div>
-        <div class="article-title">把你的项目经历翻译成 AI 原生语言</div>
-        <div class="article-summary">
-          <p>你的简历已经很好，但还可以用 2025 年的 AI 语言体系重新表达，让 AI 原生公司的面试官一眼看出你懂大模型时代的产品逻辑。</p>
-          <p><span class="tag tag-red">对照练习</span>以下是一个"旧表达 → 新表达"的示例框架：</p>
-          <p>❌ 旧表达："基于 BERT/NLP 定义了 14 个业务意图分类，准确率从 35% 提升至 85%"</p>
-          <p>✅ 新表达："设计了一个 3 层 Intent Agent：（1）流式 ASR 实时转写；（2）微调 BERT 做 14 分类意图路由；（3）低置信度时触发人机协同兜底。通过 Badcase 驱动的数据飞轮，将意图准确率从 35% → 85%，并建立了持续迭代的评估体系。"</p>
-          <p><span class="tag tag-blue">关键差异</span>新表达体现了：架构思维（3 层设计）、数据闭环意识（数据飞轮）、Agent 范式理解（工具调用+兜底策略）。这些是 AI 原生 PM 最看重的思维方式。</p>
-        </div>
+      <div id="day3-content">
+        <div style="padding:24px;text-align:center;color:var(--muted);font-family:'Space Mono',monospace;font-size:11px;letter-spacing:1px;">AI 生成中...</div>
       </div>
-
-      <div class="keypoints">
-        <div class="keypoints-title">🔑 你的 3 个可重新表达的项目亮点</div>
-        <div class="keypoint">
-          <div class="keypoint-dot"></div>
-          <div class="keypoint-text"><strong>坐席辅助中的 RAG</strong>：你搭建的"话术地图"推荐 = 早期 RAG 系统。可以表达为："设计了基于向量数据库的 Retrieval-Augmented Generation 系统，根据实时对话上下文动态检索最优应答策略，覆盖 XX 个业务场景。"</div>
-        </div>
-        <div class="keypoint">
-          <div class="keypoint-dot"></div>
-          <div class="keypoint-text"><strong>RPA+AI 项目</strong>：这是 Agentic Workflow 的早期实践。可以表达为："主导设计 RPA+LLM 混合 Agent，以 OCR+NLP 作为感知层，规则引擎作为决策层，RPA 作为执行层，构建端到端自动化工作流。"</div>
-        </div>
-        <div class="keypoint">
-          <div class="keypoint-dot"></div>
-          <div class="keypoint-text"><strong>国产化迁移中的配置平台化</strong>：你把 IVR/话术/路由抽象为可视化配置中台，这是"AI 策略快速实验底座"，可以表达为："构建了 AI 策略配置平台，支持千人千面路由策略的动态热更新和灰度实验，降低算法迭代的工程耦合度。"</div>
-        </div>
-      </div>
-
       <div class="reflection-block">
-        <div class="reflection-label">✍️ 今日输出任务（重要！）</div>
-        <div class="reflection-q">选择你简历中的任意一个项目，用"AI 原生语言"重写 2-3 句核心描述，体现架构层次感和数据闭环思维。写完可以发给我点评。</div>
+        <div class="reflection-label">✍️ 今日输出任务</div>
+        <div class="reflection-q" id="day3-reflection-q">加载中...</div>
         <textarea class="reflection-input" id="reflect-day3" placeholder="在这里写下你的新版项目描述..." oninput="saveReflect('day3', this.value)" style="min-height:120px;"></textarea>
       </div>
-
       <div class="check-row">
         <span style="font-size:12px;color:var(--muted);">预计耗时 20 分钟</span>
         <button class="check-btn" id="btn-day3" onclick="markDone('day3')">标记完成 ✓</button>
@@ -778,10 +618,8 @@
     </div>
   </div>
 
-
 </div>
 
-<!-- ============= INTERVIEW TAB ============= -->
 <div class="tab-panel content" id="tab-interview">
   <div class="section-hd">
     <h2>每日面经题</h2>
@@ -792,58 +630,65 @@
 </div>
 
 <div class="tab-panel content" id="tab-weekly">
-
   <div class="section-hd">
     <h2>周目标</h2>
     <div class="section-hd-line"></div>
     <span style="font-family:'Space Mono',monospace;font-size:10px;color:var(--muted);">每周一个具体产出</span>
   </div>
-
-  <div class="weekly-block">
-    <div class="weekly-label">📌 第 1 周目标</div>
-    <div class="weekly-title">写一篇：银行智能客服的 RAG 落地踩坑实录</div>
-    <div class="weekly-desc">你在坐席辅助项目中用 RAG 搭建了话术推荐系统，这段经历是外部 AI PM 没有的第一手经验。把它写成文章，发布在公众号/知乎/即刻，一篇好的行业文章能让你在圈子里被看见。</div>
-    <button class="weekly-check-btn" id="weekly-btn-1" onclick="toggleWeekly(1)">标记完成</button>
+  <div id="weekly-container">
+    <div style="padding:24px;text-align:center;color:var(--muted);font-family:'Space Mono',monospace;font-size:11px;letter-spacing:1px;">AI 生成中...</div>
   </div>
-
-  <div style="height:16px;"></div>
-
-  <div class="weekly-block" style="background:var(--card-bg);color:var(--ink);border:1px solid var(--border);">
-    <div class="weekly-label" style="color:var(--muted);">📌 第 2 周目标</div>
-    <div class="weekly-title">整理你的 AI 产品方法论框架图</div>
-    <div class="weekly-desc" style="color:var(--muted);">把你 4 年积累的 AI 产品工作方法（需求挖掘→算法需求转化→数据闭环→Badcase 分析）做成一张可视化框架图，用于面试时白板讲解。</div>
-    <button class="weekly-check-btn" id="weekly-btn-2" onclick="toggleWeekly(2)" style="border-color:var(--muted);color:var(--muted);">标记完成</button>
-  </div>
-
-  <div style="height:16px;"></div>
-
-  <div class="weekly-block" style="background:var(--card-bg);color:var(--ink);border:1px solid var(--border);">
-    <div class="weekly-label" style="color:var(--muted);">📌 第 3 周目标</div>
-    <div class="weekly-title">投递 3 家目标公司，复盘 JD Gap</div>
-    <div class="weekly-desc" style="color:var(--muted);">选 3 家你想去的公司（互联网/AI 原生/大厂 AI 部门），对照 JD 找到你的能力 Gap，制定针对性补足计划。</div>
-    <button class="weekly-check-btn" id="weekly-btn-3" onclick="toggleWeekly(3)" style="border-color:var(--muted);color:var(--muted);">标记完成</button>
-  </div>
-
-  <div style="height:16px;"></div>
-
-  <div class="weekly-block" style="background:var(--card-bg);color:var(--ink);border:1px solid var(--border);">
-    <div class="weekly-label" style="color:var(--muted);">📌 第 4 周目标</div>
-    <div class="weekly-title">模拟回答：用 Agent 重设计坐席辅助</div>
-    <div class="weekly-desc" style="color:var(--muted);">准备一道高频面试题的完整答案：「如果今天用 LLM Agent 重新设计你的坐席辅助系统，你会怎么做？有哪些坑？」</div>
-    <button class="weekly-check-btn" id="weekly-btn-4" onclick="toggleWeekly(4)" style="border-color:var(--muted);color:var(--muted);">标记完成</button>
-  </div>
-
 </div>
 
 <script>
-  // ── 飞书配置 ──────────────────────────────────────────
+  // ── 日期及本地缓存（修复时区计算 Bug） ──────────────────────
+  const now = new Date();
+  const offset = now.getTimezoneOffset() * 60000;
+  const localISOTime = (new Date(now.getTime() - offset)).toISOString().slice(0, -1);
+  const todayStr = localISOTime.slice(0, 10); // 获取精准的本地日期字符串 YYYY-MM-DD
+  
+  const opts = { year: 'numeric', month: 'long', day: 'numeric', weekday: 'long' };
+  document.getElementById('dateBadge').textContent = now.toLocaleDateString('zh-CN', opts);
+
+  function lsave(key, val) { try { localStorage.setItem('aipm_' + key, JSON.stringify(val)); } catch(e){} }
+  function lload(key, def) { try { const v = localStorage.getItem('aipm_' + key); return v !== null ? JSON.parse(v) : def; } catch(e){ return def; } }
+
+  // ── 全局密码验证与拦截 ──────────────────────────────────────────
+  const CORRECT_PWD = 'ruting2026';
+  let isAuthorized = lload('authorized', false);
+
+  function checkGlobalAuth() {
+    if (isAuthorized) return true;
+    const input = prompt('🔐 AI PM 成长空间\n请输入专属打卡密码：');
+    if (input === CORRECT_PWD) {
+      isAuthorized = true;
+      lsave('authorized', true);
+      return true;
+    } else {
+      alert('密码错误！你没有权限访问此页面哦。');
+      document.body.innerHTML = '<h2 style="text-align:center;margin-top:20vh;color:#c84b2f;font-family:\'Noto Serif SC\', serif;">🚧 无访问权限</h2>';
+      return false;
+    }
+  }
+
+  // ── 飞书与大模型配置（加密混淆版） ───────────────────────────
+  function getRealKey(obfuscatedStr) {
+    return atob(obfuscatedStr).split('').reverse().join('');
+  }
+
+  // 建议：在飞书和AI Studio后台重置密钥后，在控制台用 btoa("新密钥".split('').reverse().join('')) 重新生成此处的值
+  const OBFUSCATED_FS_SECRET = 'SHdrQ3FGMHFrS2M5YXFWVnZCdVBsUVBXTU1Deml2UlE=';
+  const OBFUSCATED_GEMINI_KEY = 'SU9OT3lqYU9mRTlfNXJtVVdpOXRHU2tpYnFFbEpzRUR5U2F6SUE=';
+
   const FEISHU = {
     appId:     'cli_a9248a4017f8dcb3',
-    appSecret: 'QRvizCMMWPQlPuBvVVqa9cKkq0FqCkwH',
+    appSecret: getRealKey(OBFUSCATED_FS_SECRET),
     baseId:    'KiBzbaG9patb0isx4oGcUbPWnOe',
     tableId:   'tblX1j2AaKiDalFp',
     interviewTableId: 'tblrik3BihWl2tIt',
   };
+
+  const GEMINI_KEY = getRealKey(OBFUSCATED_GEMINI_KEY);
 
   // ── 代理列表（依次尝试） ───────────────────────────────
   const PROXIES = [
@@ -867,83 +712,256 @@
     throw new Error('all proxies failed');
   }
 
-  // ── 面经题库 ──────────────────────────────────────────
-  const QUESTIONS = [
-    {
-      id: 'q1', num: 1, category: 'AI技术实操及AI知识面',
-      title: '你了解国内哪些底座大模型？各自能力优势和区别是什么？',
-      framework: '① 列举主流模型（豆包/文心/讯飞/通义/DeepSeek/智谱）\n② 各自能力项对比（生成/推理/语音/代码）\n③ 收敛到金融场景：哪家更适合客服/营销/合规\n④ 护城河分析：数据飞轮 vs 生态绑定',
-      reference: '• DeepSeek：开源，数学/代码推理强，成本极低，国际影响力最大，金融量化分析有优势\n• 通义千问：长文本最强（100万token），适合金融报告/合同分析，阿里云生态绑定\n• 文心一言：搜索+知识融合，资讯类场景好，专业领域深度稍弱\n• 讯飞星火：语音能力最强（ASR/TTS），金融客服/坐席辅助首选\n• 智谱GLM：多模态+AutoGLM智能体，复杂任务规划能力强\n\n金融场景选型：客服→讯飞；长文档→通义；Agent→智谱；成本敏感→DeepSeek\n护城河本质：真正壁垒在数据飞轮和生态绑定，纯模型能力护城河低',
-      knowledge: '大模型能力评测维度 · 开源vs闭源策略 · 数据飞轮 · 金融垂直场景选型 · 模型护城河分析'
-    },
-    {
-      id: 'q2', num: 2, category: 'AI技术实操及AI知识面',
-      title: '大模型微调和RAG各自有什么优缺点？你在项目中如何选择？',
-      framework: '① RAG优缺点\n② 微调优缺点\n③ 选型决策树（知识更新频率/合规要求/成本）\n④ 结合自己的坐席辅助RAG项目经验举例',
-      reference: 'RAG优点：知识实时更新、成本低、可溯源、合规友好\nRAG缺点：检索质量依赖向量化、多跳推理弱、召回噪声影响生成\n\n微调优点：行为风格固化、垂直术语理解准确、推理稳定\n微调缺点：成本高、知识更新需重训、灾难性遗忘风险\n\n我的实践：坐席辅助选RAG，因为银行话术每季度更新，微调维护成本极高；金融场景需要答案可溯源，RAG天然满足合规要求',
-      knowledge: 'RAG架构原理 · 向量数据库 · Fine-tuning · 知识更新策略 · 金融合规选型'
-    },
-    {
-      id: 'q3', num: 3, category: 'AI技术实操及AI知识面',
-      title: '微调的数据质量标准是如何制定的？你有哪些实践经验？',
-      framework: '① 数据质量的核心维度（准确性/多样性/覆盖率/标注一致性）\n② 标注规范制定流程\n③ Badcase分析如何反哺数据质量\n④ 结合你的意图识别标注经验',
-      reference: '数据质量核心维度：\n• 准确性：标注结果与业务定义一致\n• 多样性：覆盖各种表达方式和边界case\n• 覆盖率：各意图类别数据均衡，避免长尾\n• 一致性：多标注员结果一致，需计算Kappa系数\n\n标注规范制定：先定义标注指南→小批量试标→计算一致性→迭代优化指南→正式标注\n\nBadcase反哺：线上识别错误→分析错误类型→补充对应训练数据→重训模型→验证提升',
-      knowledge: '数据标注规范 · Kappa系数 · Badcase分析 · 数据飞轮 · 意图识别训练'
-    },
-    {
-      id: 'q4', num: 4, category: 'AI技术实操及AI知识面',
-      title: 'RAG pipeline的流程你了解哪些？有哪些优化手段？',
-      framework: '① 标准RAG流程（文档处理→向量化→检索→生成）\n② 检索优化（稠密/稀疏/混合检索）\n③ 生成优化（Reranker/上下文压缩）\n④ 结合你的话术推荐系统经验',
-      reference: '标准RAG流程：\n文档切片→Embedding向量化→存入向量库→用户Query向量化→相似度检索→召回片段+Prompt→LLM生成\n\n优化手段：\n• 检索侧：混合检索（BM25+向量）提升召回；Query改写扩展语义\n• 排序侧：Reranker精排，过滤低相关结果\n• 生成侧：上下文压缩减少token；Few-shot示例引导格式\n• 数据侧：文档切片策略（按语义而非固定长度）\n\n我的实践：坐席辅助中用上下文关联机制，根据对话进展动态调整检索query，提升话术匹配准确率',
-      knowledge: 'RAG pipeline · Embedding · 向量数据库 · BM25 · Reranker · Query改写 · 上下文压缩'
+  // ── 通用 Gemini API 请求封装 ─────────────────────────
+  async function askGemini(prompt, fallbackData) {
+    try {
+      const geminiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${GEMINI_KEY}`;
+      const res = await fetchWithProxy(geminiUrl, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          contents: [{ parts: [{ text: prompt }] }],
+          generationConfig: { temperature: 0.7, maxOutputTokens: 2000 }
+        })
+      });
+      const data = await res.json();
+      const text = data.candidates[0].content.parts[0].text;
+      const clean = text.replace(/```json|```/g, '').trim();
+      return JSON.parse(clean);
+    } catch(e) {
+      console.error('Gemini请求失败，使用兜底数据', e);
+      return fallbackData;
     }
-  ];
+  }
 
-  // 今日面经题（每天2道，按序轮换）
-  function getTodayQuestions() {
+  // 面经出题类别（按优先级顺序）
+  const Q_CATEGORIES = ['AI技术实操及AI知识面', '项目/产品经验类', '产品核心方法论', '行业/业务/趋势认知类'];
+  let usedTitles = lload('usedTitles', []);
+
+  // ── 调用 Gemini 生成 Day1 推荐阅读 ───────────────────
+  async function generateDay1WithGemini() {
+    const cached = lload('day1_' + todayStr, null);
+    if (cached) { renderDay1(cached); return; }
+    
+    const prompt = `你是一位AI产品经理成长导师。今天是${todayStr}，请为以下学员生成一篇今日AI前沿动态摘要：
+学员背景：卓**，宁波银行产品经理，正在转型AI产品经理，有金融智能客服（ASR+RAG+NER）经验。
+要求：
+1. 选取今天最值得关注的1个AI技术/产品进展（近期真实动态）
+2. 用金融AI PM的视角解读，结合她的背景说明为什么重要
+3. 提炼3个她需要记住的关键点，每个关键点结合她的坐席辅助/银行经验
+4. 给出1道思考题，引导她用今天的内容重新审视自己的项目经历
+请严格按以下JSON格式返回，不要有任何其他文字：
+{
+  "title": "今日主题标题",
+  "summary": "3-4句话的核心摘要，说明这个进展是什么、为什么重要",
+  "keypoints": [
+    {"label": "关键点标题", "content": "具体内容，结合金融背景"},
+    {"label": "关键点标题", "content": "具体内容"},
+    {"label": "关键点标题", "content": "具体内容"}
+  ],
+  "reflection": "思考题内容"
+}`;
+
+    const fallback = {
+      title: 'AI Agent 正在重塑金融客服基础设施',
+      summary: '2026年AI Agent从概念走向大规模落地，金融行业智能客服正在经历从"问答机器人"到"自主服务Agent"的跃迁。坐席辅助、智能外呼、合规审查等场景都在被重构。',
+      keypoints: [
+        { label: 'Agent ≠ 聊天机器人', content: 'Agent能循环调用工具、自主规划步骤。你的坐席辅助（意图识别→RAG推荐→工单NER）已是早期Agent形态，面试时要主动用Agent语言表达。' },
+        { label: 'MCP成为工具调用标准', content: 'MCP统一了AI工具调用方式，就像REST API统一接口。你的下一个产品方案可以考虑用MCP打通行内CRM/知识库/工单系统。' },
+        { label: '数据质量是核心壁垒', content: '32%团队把输出质量列为第一障碍。你在金融场景做Badcase分析、AB测试的经验，是外部AI PM没有的稀缺竞争力。' }
+      ],
+      reflection: '如果用Agent重新设计你的坐席辅助系统，你会把哪些步骤拆解为独立工具调用？MCP架构下系统边界会发生什么变化？'
+    };
+
+    const article = await askGemini(prompt, fallback);
+    lsave('day1_' + todayStr, article);
+    renderDay1(article);
+  }
+
+  function renderDay1(article) {
+    const container = document.getElementById('day1-content');
+    if (!container) return;
+    container.innerHTML = `
+      <div class="article-block">
+        <div class="article-meta">📰 今日前沿 · AI 动态</div>
+        <div class="article-title">${article.title}</div>
+        <div class="article-summary">
+          <p><span class="tag tag-blue">今日摘要</span>${article.summary}</p>
+        </div>
+      </div>
+      <div class="keypoints">
+        <div class="keypoints-title">🔑 你需要记住的 3 个关键点</div>
+        ${article.keypoints.map(kp => `
+          <div class="keypoint">
+            <div class="keypoint-dot"></div>
+            <div class="keypoint-text"><strong>${kp.label}</strong>：${kp.content}</div>
+          </div>`).join('')}
+      </div>`;
+    const rq = document.getElementById('day1-reflection-q');
+    if (rq) rq.textContent = article.reflection;
+  }
+
+  // ── 调用 Gemini 生成 Day2 产品拆解 ───────────────────
+  async function generateDay2WithGemini() {
+    const cached = lload('day2_' + todayStr, null);
+    if (cached) { renderDay2(cached); return; }
+    
+    const products = ['Cursor', 'Perplexity', 'Linear', 'Descript', 'Gamma', 'Runway', 'Glean', 'Rewind', 'Harvey', 'Otter.ai', 'Figma AI', 'Canva AI'];
+    const start = new Date('2026-03-10');
+    const dayIndex = Math.floor((new Date(todayStr) - start) / 86400000);
+    const product = products[dayIndex % products.length];
+    
+    const prompt = `你是一位AI产品经理成长导师。请帮以下学员拆解一款非金融AI产品：\n\n学员背景：卓**，宁波银行产品经理，转型AI PM，有金融智能客服（ASR+RAG+NER）经验。\n\n今日拆解产品：${product}\n\n请从金融PM的视角拆解，提炼3个可迁移的产品设计思路，并给出1道思考题。\n\n请严格按以下JSON格式返回，不要有任何其他文字：\n{\n  "product": "${product}",\n  "title": "一句话描述这个产品的核心价值",\n  "summary": "3-4句话：产品是什么、AI能力如何体现、商业逻辑",\n  "keypoints": [\n    {"label": "迁移视角标题", "content": "结合金融背景的具体迁移思路"},\n    {"label": "迁移视角标题", "content": "具体内容"},\n    {"label": "迁移视角标题", "content": "具体内容"}\n  ],\n  "reflection": "思考题"\n}`;
+    
+    const fallback = { product: 'Cursor', title: '让编程效率提升10倍的AI代码编辑器', summary: 'Cursor把AI深度嵌入代码编辑器，能理解整个项目上下文、自主修改多个文件。核心是"AI了解你的代码库"而不是孤立回答问题，商业上以订阅制快速增长。', keypoints: [{ label: '上下文感知 = 客户画像系统', content: 'Cursor能理解整个代码库上下文，类似你的智能营销系统需要理解客户全生命周期行为。核心设计问题：AI的上下文窗口如何高效管理？' }, { label: '嵌入工作流而非独立产品', content: 'Cursor不要求用户切换工具，AI就在编辑器里。你的坐席辅助也是这个逻辑——坐席不需要离开工作台就能获取话术推荐。' }, { label: '人机协同的置信度设计', content: 'Cursor生成代码后用户可以一键接受/拒绝/修改，类似你的话术采纳率指标设计。' }], reflection: 'Cursor通过理解整个代码库来提供精准建议。你的RAG话术推荐系统如何扩大"上下文理解范围"，除了当前对话还能引入哪些信号？' };
+
+    const article = await askGemini(prompt, fallback);
+    lsave('day2_' + todayStr, article);
+    renderDay2(article);
+  }
+
+  function renderDay2(article) {
+    const container = document.getElementById('day2-content');
+    if (!container) return;
+    container.innerHTML = `<div class="article-block"><div class="article-meta">🔍 产品拆解 · 今日案例：${article.product}</div><div class="article-title">${article.title}</div><div class="article-summary"><p><span class="tag tag-blue">产品概览</span>${article.summary}</p></div></div><div class="keypoints"><div class="keypoints-title">🔑 金融 PM 的借鉴视角</div>${article.keypoints.map(kp => `<div class="keypoint"><div class="keypoint-dot"></div><div class="keypoint-text"><strong>${kp.label}</strong>：${kp.content}</div></div>`).join('')}</div>`;
+    const rq = document.getElementById('day2-reflection-q');
+    if (rq) rq.textContent = article.reflection;
+  }
+
+  // ── 调用 Gemini 生成 Day3 简历重写 ───────────────────
+  async function generateDay3WithGemini() {
+    const cached = lload('day3_' + todayStr, null);
+    if (cached) { renderDay3(cached); return; }
+    
+    const projects = ['坐席辅助系统（ASR+BERT意图识别+RAG话术推荐+NER工单）', '视频银行产品（远程开户/面签/客服）', 'IVR国产化迁移（话术/路由/配置平台化）', '智能营销系统（客群筛选+旅程经营+效果归因）'];
+    const start = new Date('2026-03-10');
+    const dayIndex = Math.floor((new Date(todayStr) - start) / 86400000);
+    const project = projects[dayIndex % projects.length];
+    
+    const prompt = `你是一位AI产品经理简历优化专家。请帮以下候选人用AI原生语言重新表达她的项目经历：\n\n候选人：卓**，宁波银行/广州农商行产品经理，4年金融科技经验，目标转型AI PM。\n\n今日练习项目：${project}\n\n请提供旧表达→新表达的对比示例，并给出今日输出任务。\n\n请严格按以下JSON格式返回，不要有任何其他文字：\n{\n  "project": "${project}",\n  "old_expression": "旧表达示例（1-2句）",\n  "new_expression": "新表达示例（2-3句，体现架构思维/数据飞轮/Agent范式）",\n  "highlights": [\n    {"label": "亮点标题", "content": "说明为什么这样表达更好"},\n    {"label": "亮点标题", "content": "说明"},\n    {"label": "亮点标题", "content": "说明"}\n  ],\n  "task": "今日输出任务描述"\n}`;
+    
+    const fallback = { project: '坐席辅助系统', old_expression: '基于BERT/NLP定义了14个业务意图分类，准确率从35%提升至85%，搭建话术推荐系统提升坐席效率。', new_expression: '设计了3层Intent Agent：①流式ASR实时转写；②微调BERT做14分类意图路由；③低置信度时触发人机协同兜底。通过Badcase驱动的数据飞轮将意图准确率35%→85%，并基于向量数据库构建RAG话术推荐，实现上下文感知的实时策略检索。', highlights: [{ label: '架构分层思维', content: '新表达把系统拆成感知层/决策层/执行层，体现AI PM对技术架构的理解深度。' }, { label: '数据飞轮意识', content: '"Badcase驱动"说明你懂得如何用线上数据持续改进模型，这是AI产品的核心竞争力。' }, { label: 'Agent范式理解', content: '"低置信度触发人机协同"体现了对AI能力边界的清醒认知和优雅的降级策略设计。' }], task: '选择你简历中今日项目的一个具体功能点，参照以上"新表达"框架，用AI原生语言重写2-3句，发给我点评。' };
+
+    const article = await askGemini(prompt, fallback);
+    lsave('day3_' + todayStr, article);
+    renderDay3(article);
+  }
+
+  function renderDay3(article) {
+    const container = document.getElementById('day3-content');
+    if (!container) return;
+    container.innerHTML = `<div class="article-block"><div class="article-meta">✍️ 简历重写训练 · 今日项目：${article.project}</div><div class="article-title">用 AI 原生语言重新表达你的经历</div><div class="article-summary"><p><span class="tag tag-red">❌ 旧表达</span>${article.old_expression}</p><p style="margin-top:12px;"><span class="tag tag-green">✅ 新表达</span>${article.new_expression}</p></div></div><div class="keypoints"><div class="keypoints-title">🔑 新表达体现的 3 个 AI PM 思维</div>${article.highlights.map(h => `<div class="keypoint"><div class="keypoint-dot"></div><div class="keypoint-text"><strong>${h.label}</strong>：${h.content}</div></div>`).join('')}</div>`;
+    const rq = document.getElementById('day3-reflection-q');
+    if (rq) rq.textContent = article.task;
+  }
+
+  // ── 调用 Gemini 生成本周目标 ──────────────────────────
+  async function generateWeeklyWithGemini() {
+    const start = new Date('2026-03-10');
+    const dayIndex = Math.floor((new Date(todayStr) - start) / 86400000);
+    const weekNum = Math.floor(dayIndex / 7) + 1;
+    const cacheKey = 'weekly_w' + weekNum;
+    const cached = lload(cacheKey, null);
+    if (cached) { renderWeekly(cached, weekNum); return; }
+    
+    const prompt = `你是一位AI产品经理转型教练。请为以下学员生成第${weekNum}周的4个学习目标：\n\n学员背景：卓**，宁波银行产品经理，目标转型AI PM，4年金融科技经验，已坚持学习${weekNum - 1}周。\n\n第${weekNum}周目标要求：结合她当前转型阶段，制定合适难度、具体可执行、有明确产出物的4个目标。\n\n请严格按以下JSON格式返回，不要有任何其他文字：\n{\n  "week": ${weekNum},\n  "theme": "本周主题（4-8字）",\n  "goals": [\n    {"title": "目标标题", "desc": "具体说明，包含产出物和执行建议"},\n    {"title": "目标标题", "desc": "具体说明"},\n    {"title": "目标标题", "desc": "具体说明"},\n    {"title": "目标标题", "desc": "具体说明"}\n  ]\n}`;
+    
+    const fallback = { week: weekNum, theme: 'AI PM 知识建立', goals: [{ title: '写一篇行业文章', desc: '把你的RAG落地经验写成文章发布在知乎/即刻，建立行业可见度。' }, { title: '整理AI产品方法论', desc: '把4年积累的AI产品工作方法做成可视化框架图，用于面试白板讲解。' }, { title: '投递3家目标公司', desc: '选3家目标公司，对照JD找能力Gap，制定补足计划。' }, { title: '准备1道核心面试题', desc: '准备「用Agent重设计坐席辅助」的完整答案，包含架构图和数据闭环设计。' }] };
+
+    const weekly = await askGemini(prompt, fallback);
+    lsave(cacheKey, weekly);
+    renderWeekly(weekly, weekNum);
+  }
+
+  function renderWeekly(weekly, weekNum) {
+    const container = document.getElementById('weekly-container');
+    if (!container) return;
+    container.innerHTML = weekly.goals.map((g, i) => {
+      const n = i + 1;
+      const isDone = state.weekly && state.weekly[`w${weekNum}_${n}`];
+      return `<div class="weekly-block" style="${isDone ? '' : 'background:var(--card-bg);color:var(--ink);border:1px solid var(--border);'}"><div class="weekly-label" style="${isDone ? '' : 'color:var(--muted);'}">📌 第 ${weekNum} 周 · 目标 ${n}　<span style="font-family:\'Space Mono\',monospace;font-size:9px;letter-spacing:1px;">${weekly.theme}</span></div><div class="weekly-title">${g.title}</div><div class="weekly-desc" style="${isDone ? '' : 'color:var(--muted);'}">${g.desc}</div><button class="weekly-check-btn" id="weekly-btn-${n}" onclick="toggleWeeklyDynamic(${weekNum},${n})" style="${isDone ? '' : 'border-color:var(--muted);color:var(--muted);'}">${isDone ? '已完成 ✓' : '标记完成'}</button></div>${i < weekly.goals.length - 1 ? '<div style="height:16px;"></div>' : ''}`;
+    }).join('');
+  }
+
+  function toggleWeeklyDynamic(weekNum, n) {
+    const key = `w${weekNum}_${n}`;
+    if (!state.weekly) state.weekly = {};
+    state.weekly[key] = !state.weekly[key];
+    const btn = document.getElementById('weekly-btn-' + n);
+    if (btn) { btn.textContent = state.weekly[key] ? '已完成 ✓' : '标记完成'; btn.style.borderColor = state.weekly[key] ? '' : 'var(--muted)'; btn.style.color = state.weekly[key] ? '' : 'var(--muted)'; }
+    scheduleSync();
+  }
+
+  // ── 调用 Gemini 生成今日2道面经题 (修复断层 Bug) ────────────
+  async function generateQuestionsWithGemini() {
     const start = new Date('2026-03-10');
     const today = new Date(todayStr);
     const dayIndex = Math.floor((today - start) / 86400000);
-    const startQ = (dayIndex * 2) % QUESTIONS.length;
-    return [
-      QUESTIONS[startQ % QUESTIONS.length],
-      QUESTIONS[(startQ + 1) % QUESTIONS.length]
+    const category = Q_CATEGORIES[Math.floor(dayIndex / 8) % Q_CATEGORIES.length];
+    const usedStr = usedTitles.length > 0 ? `\n已出过的题目（不要重复）：\n${usedTitles.slice(-30).join('\n')}` : '';
+
+    const prompt = `你是一位资深AI产品经理面试官。请为以下候选人生成2道面试题：
+候选人背景：卓**，29岁，宁波银行产品经理，4年金融科技经验。主导过坐席辅助系统（ASR+BERT意图识别+RAG话术推荐+NER工单）、视频银行、IVR国产化迁移、智能营销系统等项目。目标转型为AI产品经理。
+题目类别：${category}
+${usedStr}
+请严格按照以下JSON格式返回，不要有任何其他文字：
+[
+  {
+    "title": "题目内容",
+    "framework": "答题框架（分步骤，每步用\\n分隔）",
+    "reference": "参考答案（结合候选人金融背景，详细具体）",
+    "knowledge": "涉及知识点（用 · 分隔）"
+  },
+  {
+    "title": "题目内容",
+    "framework": "答题框架",
+    "reference": "参考答案",
+    "knowledge": "涉及知识点"
+  }
+]`;
+
+    const fallback = [
+      { title: '请介绍一下你对大模型Agent的理解，以及在金融场景的应用可能性？', framework: '① Agent定义与核心能力\n② 与传统RPA/规则引擎的区别\n③ 金融场景应用案例\n④ 落地挑战与解决思路', reference: 'Agent是具备自主规划、工具调用、多步执行能力的LLM应用。与传统自动化相比，Agent能处理非结构化输入和动态决策。金融场景：智能客服Agent（意图→查询→回复）、合规审查Agent、投研报告Agent。落地挑战：幻觉风险、合规审计、成本控制。', knowledge: 'LLM Agent · 工具调用 · ReAct框架 · 金融AI应用 · 幻觉控制' },
+      { title: '如何评估一个AI产品的效果？你用过哪些指标？', framework: '① 技术指标（模型层）\n② 产品指标（体验层）\n③ 业务指标（价值层）\n④ 结合你的坐席辅助项目举例', reference: '技术层：准确率/召回率/F1、响应时延、幻觉率。产品层：用户满意度、任务完成率、转人工率。业务层：处理量提升、人力成本节省、NPS。坐席辅助实践：以话术采纳率作为核心指标，结合通话时长和客户满意度构建评估体系。', knowledge: '模型评估指标 · F1 Score · 业务价值度量 · AB测试 · 数据闭环' }
     ];
+
+    const questions = await askGemini(prompt, fallback);
+    return questions.map((q, i) => ({
+      id: 'q' + (i + 1),
+      num: i + 1,
+      category,
+      title: q.title,
+      framework: q.framework,
+      reference: q.reference,
+      knowledge: q.knowledge
+    }));
   }
 
-  // ── 日期 ──────────────────────────────────────────────
-  const now = new Date();
-  const opts = { year: 'numeric', month: 'long', day: 'numeric', weekday: 'long' };
-  document.getElementById('dateBadge').textContent = now.toLocaleDateString('zh-CN', opts);
-  const todayStr = now.toISOString().slice(0, 10);
+  // ── 获取今日题目 ────────────
+  let todayQuestions = lload('questions_' + todayStr, null);
 
-  // ── 本地缓存（离线兜底） ──────────────────────────────
-  function lsave(key, val) { try { localStorage.setItem('aipm_' + key, JSON.stringify(val)); } catch(e){} }
-  function lload(key, def) { try { const v = localStorage.getItem('aipm_' + key); return v !== null ? JSON.parse(v) : def; } catch(e){ return def; } }
+  async function getTodayQuestions() {
+    if (todayQuestions) return todayQuestions;
+    try {
+      const qs = await generateQuestionsWithGemini();
+      todayQuestions = qs;
+      lsave('questions_' + todayStr, qs);
+      qs.forEach(q => {
+        if (!usedTitles.includes(q.title)) usedTitles.push(q.title);
+      });
+      lsave('usedTitles', usedTitles);
+      return qs;
+    } catch(e) {
+      console.error('出题异常', e);
+      return [];
+    }
+  }
 
   let state = lload('state', { done: {}, reflections: {}, exercises: {}, weekly: {} });
   let dayDone = lload('dayDone', []);
   let token = null;
   let syncTimeout = null;
-  // 从本地缓存恢复今日 record_id，防止重复写入
   let todayRecordId = lload('recordId_' + todayStr, null);
-
-  // ── 密码验证 ──────────────────────────────────────────
-  const CORRECT_PWD = 'ruting2026';
-  let isAuthorized = lload('authorized', false);
-
-  function checkAuth() {
-    if (isAuthorized) return true;
-    const input = prompt('请输入同步密码：');
-    if (input === CORRECT_PWD) {
-      isAuthorized = true;
-      lsave('authorized', true);
-      return true;
-    } else if (input !== null) {
-      alert('密码错误，将以离线模式运行，数据仅保存在本地。');
-    }
-    return false;
-  }
 
   // ── 同步状态指示器 ────────────────────────────────────
   function setSyncStatus(status, msg) {
@@ -992,7 +1010,6 @@
   async function fetchTodayRecord() {
     try {
       const path = `/bitable/v1/apps/${FEISHU.baseId}/tables/${FEISHU.tableId}/records`;
-      // 飞书日期字段用毫秒时间戳，查今天的范围：今日 00:00 ~ 23:59
       const startTs = new Date(todayStr + 'T00:00:00+08:00').getTime();
       const endTs   = new Date(todayStr + 'T23:59:59+08:00').getTime();
       const filter  = `AND(CurrentValue.[日期]>=${startTs},CurrentValue.[日期]<=${endTs})`;
@@ -1006,14 +1023,12 @@
     return null;
   }
 
-  // ── 各任务对应的文章链接 ─────────────────────────────
   const ARTICLE_LINKS = {
     day1: 'https://simonwillison.net/2025/Dec/31/the-year-in-llms/',
     day2: 'https://www.notion.com/releases/2025-09-18',
     day3: ''
   };
 
-  // ── 构建每日打卡字段 ──────────────────────────────────
   function buildFields() {
     const doneTasks = Object.keys(state.done).filter(k => state.done[k]);
     const links = doneTasks.filter(id => ARTICLE_LINKS[id]).map(id => ARTICLE_LINKS[id]).join('\n');
@@ -1032,14 +1047,13 @@
     return fields;
   }
 
-  // ── 同步面经答案到面经表 ──────────────────────────────
   let interviewRecordIds = lload('interviewRecordIds_' + todayStr, {});
 
   async function syncInterviewAnswer(qid) {
-    const q = QUESTIONS.find(x => x.id === qid);
+    if (!todayQuestions) return;
+    const q = todayQuestions.find(x => x.id === qid);
     if (!q) return;
     const myAnswer = state.reflections[qid] || '';
-    const aiComment = state.aiComments && state.aiComments[qid] ? state.aiComments[qid] : '';
     const dateTs = new Date(todayStr + 'T00:00:00+08:00').getTime();
     const fields = {
       '日期': dateTs,
@@ -1051,11 +1065,9 @@
       '知识点': q.knowledge,
     };
     if (myAnswer) fields['我的答案'] = myAnswer;
-    if (aiComment) fields['AI点评'] = aiComment;
 
     const basePath = `/bitable/v1/apps/${FEISHU.baseId}/tables/${FEISHU.interviewTableId}/records`;
     try {
-      // 没有 recordId 时先查飞书，防止重复写入
       if (!interviewRecordIds[qid]) {
         try {
           const startTs = new Date(todayStr + 'T00:00:00+08:00').getTime();
@@ -1089,7 +1101,6 @@
     } catch(e) { console.error('面经同步失败', e); }
   }
 
-  // ── 同步到飞书（防抖 1.5s） ───────────────────────────
   function scheduleSync(interviewQid) {
     setSyncStatus('syncing', '同步中...');
     clearTimeout(syncTimeout);
@@ -1100,10 +1111,10 @@
   }
 
   async function syncToFeishu() {
-    if (!checkAuth()) {
+    if (!isAuthorized) {
       lsave('state', state);
       lsave('dayDone', dayDone);
-      setSyncStatus('offline', '离线模式，已本地保存');
+      setSyncStatus('offline', '未登录，数据暂存本地');
       return;
     }
     try {
@@ -1111,7 +1122,6 @@
       const basePath = `/bitable/v1/apps/${FEISHU.baseId}/tables/${FEISHU.tableId}/records`;
       let res;
 
-      // 没有 recordId 时先查一次飞书，防止重复写入
       if (!todayRecordId) {
         await fetchTodayRecord();
       }
@@ -1145,23 +1155,15 @@
     }
   }
 
-  // ── 从飞书加载今日数据 ────────────────────────────────
   async function loadFromFeishu() {
-    if (!isAuthorized) {
-      setSyncStatus('offline', '离线模式（本地数据）');
-      renderState();
-      return;
-    }
+    if (!isAuthorized) return;
     try {
       const fields = await fetchTodayRecord();
       if (fields) {
-        // 保存 record_id 防止重复写入
         lsave('recordId_' + todayStr, todayRecordId);
-        // 解析任务完成状态
         if (fields['任务ID'] && fields['任务ID'] !== '-') {
           fields['任务ID'].split(',').forEach(id => { if (id) state.done[id.trim()] = true; });
         }
-        // 解析思考内容
         if (fields['思考内容'] && fields['思考内容'] !== '-') {
           const parts = fields['思考内容'].split('\n\n');
           parts.forEach(p => {
@@ -1169,22 +1171,16 @@
             if (m) state.reflections[m[1]] = m[2].trim();
           });
         }
-        // 文章链接字段无需恢复到 state，固定在 ARTICLE_LINKS 里
         lsave('state', state);
         setSyncStatus('ok', '云端数据已加载 ✓');
       } else {
         setSyncStatus('ok', '今日无记录，开始打卡吧');
       }
       renderState();
-    } catch(e) {
-      setSyncStatus('offline', '离线模式（本地数据）');
-      renderState();
-    }
+    } catch(e) {}
   }
 
-  // ── 渲染 UI ───────────────────────────────────────────
   function renderState() {
-    // 学习任务（只有 day1/2/3）
     ['day1','day2','day3'].forEach(id => {
       const statusEl = document.getElementById('status-' + id);
       const btn = document.getElementById('btn-' + id);
@@ -1203,10 +1199,9 @@
         if (el) el.value = state.reflections[id];
       }
     });
-    // 周目标
     [1,2,3,4].forEach(n => {
       const btn = document.getElementById('weekly-btn-' + n);
-      if (btn && state.weekly[n]) {
+      if (btn && state.weekly && state.weekly[n]) {
         btn.classList.add('done');
         btn.textContent = '已完成 ✓';
       }
@@ -1215,13 +1210,12 @@
     renderStreak();
   }
 
-  // ── 打卡连续天数 ──────────────────────────────────────
   function renderStreak() {
     const streakRow = document.getElementById('streakRow');
     streakRow.innerHTML = '';
     for (let i = 20; i >= 0; i--) {
       const d = new Date(now); d.setDate(d.getDate() - i);
-      const ds = d.toISOString().slice(0, 10);
+      const ds = (new Date(d.getTime() - offset)).toISOString().slice(0, 10);
       const dot = document.createElement('div');
       dot.className = 'streak-dot' + (ds === todayStr ? ' today' : '') + (dayDone.includes(ds) ? ' done' : '');
       dot.textContent = d.getDate();
@@ -1229,7 +1223,6 @@
     }
   }
 
-  // ── Tab 切换 ──────────────────────────────────────────
   function switchTab(name) {
     document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
     document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
@@ -1241,7 +1234,6 @@
     document.getElementById('body-' + id).classList.toggle('open');
   }
 
-  // Mark done
   function markDone(id) {
     state.done[id] = true;
     document.getElementById('status-' + id).textContent = '已完成 ✓';
@@ -1265,7 +1257,6 @@
     btn.classList.remove('checked');
     btn.textContent = '标记完成 ✓';
     btn.onclick = () => markDone(id);
-    // 移除今日连续打卡记录
     const idx = dayDone.indexOf(todayStr);
     if (idx > -1) dayDone.splice(idx, 1);
     updateProgress();
@@ -1278,23 +1269,6 @@
     scheduleSync();
   }
 
-  function toggleEx(id) {
-    state.exercises[id] = !state.exercises[id];
-    const el = document.getElementById('ex-' + id);
-    if (state.exercises[id]) { el.classList.add('checked'); el.textContent = '✓'; }
-    else { el.classList.remove('checked'); el.textContent = ''; }
-    updateProgress();
-    scheduleSync();
-  }
-
-  function toggleWeekly(n) {
-    state.weekly[n] = !state.weekly[n];
-    const btn = document.getElementById('weekly-btn-' + n);
-    btn.classList.toggle('done', state.weekly[n]);
-    btn.textContent = state.weekly[n] ? '已完成 ✓' : '标记完成';
-    scheduleSync();
-  }
-
   function updateProgress() {
     const learnDone = ['day1','day2','day3'].filter(d => state.done[d]).length;
     const interviewDone = state.done['interview'] ? 1 : 0;
@@ -1304,11 +1278,11 @@
     document.getElementById('progressText').textContent = done + ' / ' + total + ' 完成';
   }
 
-  // ── 渲染面经题 ────────────────────────────────────────
-  function renderInterview() {
-    const qs = getTodayQuestions();
+  async function renderInterview() {
     const container = document.getElementById('interview-container');
     if (!container) return;
+    container.innerHTML = '<div style="padding:40px;text-align:center;font-family:\'Space Mono\',monospace;font-size:12px;color:var(--muted);">AI 正在生成今日面经题...</div>';
+    const qs = await getTodayQuestions();
     container.innerHTML = qs.map((q, i) => `
       <div class="day-card" style="margin-bottom:24px;">
         <div class="day-header" onclick="this.nextElementSibling.classList.toggle('open')">
@@ -1348,7 +1322,6 @@
         <button class="check-btn" id="btn-interview" onclick="markInterviewDone()">标记完成 ✓</button>
       </div>`;
 
-    // 恢复完成状态
     if (state.done['interview']) {
       const btn = document.getElementById('btn-interview');
       if (btn) { btn.classList.add('checked'); btn.textContent = '撤销完成'; btn.onclick = cancelInterviewDone; }
@@ -1360,16 +1333,6 @@
     scheduleSync(qid);
   }
 
-  function markInterviewDone() {
-    state.done['interview'] = true;
-    const btn = document.getElementById('btn-interview');
-    if (btn) { btn.classList.add('checked'); btn.textContent = '撤销完成'; btn.onclick = cancelInterviewDone; }
-    // 同步两道题到面经表
-    getTodayQuestions().forEach(q => syncInterviewAnswer(q.id));
-    scheduleSync();
-    updateProgress();
-  }
-
   async function deleteInterviewRecord(qid) {
     const recordId = interviewRecordIds[qid];
     if (!recordId) return;
@@ -1378,23 +1341,32 @@
       await feishuAPI('DELETE', `${basePath}/${recordId}`);
       interviewRecordIds[qid] = null;
       lsave('interviewRecordIds_' + todayStr, interviewRecordIds);
-    } catch(e) { console.error('面经删除失败', e); }
+    } catch(e) {}
   }
 
-  function cancelInterviewDone() {
+  async function markInterviewDone() {
+    state.done['interview'] = true;
+    const btn = document.getElementById('btn-interview');
+    if (btn) { btn.classList.add('checked'); btn.textContent = '撤销完成'; btn.onclick = cancelInterviewDone; }
+    const qs = await getTodayQuestions();
+    qs.forEach(q => syncInterviewAnswer(q.id));
+    scheduleSync();
+    updateProgress();
+  }
+
+  async function cancelInterviewDone() {
     state.done['interview'] = false;
     const btn = document.getElementById('btn-interview');
     if (btn) { btn.classList.remove('checked'); btn.textContent = '标记完成 ✓'; btn.onclick = markInterviewDone; }
-    // 删除飞书面经表中今日两条记录
     setSyncStatus('syncing', '同步中...');
-    Promise.all(getTodayQuestions().map(q => deleteInterviewRecord(q.id)))
+    const qs = await getTodayQuestions();
+    Promise.all(qs.map(q => deleteInterviewRecord(q.id)))
       .then(() => setSyncStatus('ok', '已同步 ✓'))
       .catch(() => setSyncStatus('err', '删除失败'));
     scheduleSync();
     updateProgress();
   }
 
-  // ── 固定 header 高度计算 ──────────────────────────────
   function adjustLayout() {
     const header = document.querySelector('.header');
     const tabNav = document.querySelector('.tab-nav');
@@ -1408,12 +1380,25 @@
   window.addEventListener('resize', adjustLayout);
 
   // ── 启动 ─────────────────────────────────────────────
-  renderState();
-  renderInterview();
-  adjustLayout();
-  const dayOfCycle = ((now.getDay() + 6) % 3) + 1;
-  toggleCard('day' + dayOfCycle);
-  loadFromFeishu();
+  async function init() {
+    if (!checkGlobalAuth()) return; // 密码拦截，必须先行！
+    
+    renderState();
+    renderInterview();
+    generateDay1WithGemini();
+    generateDay2WithGemini();
+    generateDay3WithGemini();
+    generateWeeklyWithGemini();
+    adjustLayout();
+    
+    const dayOfCycle = ((now.getDay() + 6) % 3) + 1;
+    toggleCard('day' + dayOfCycle);
+    loadFromFeishu();
+  }
+
+  init();
 </script>
 </body>
 </html>
+
+```
