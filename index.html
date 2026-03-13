@@ -1,5 +1,3 @@
-
-
 ```html
 <!DOCTYPE html>
 <html lang="zh-CN">
@@ -671,24 +669,21 @@
     }
   }
 
-  // ── 飞书与大模型配置（加密混淆版） ───────────────────────────
-  function getRealKey(obfuscatedStr) {
-    return atob(obfuscatedStr).split('').reverse().join('');
-  }
-
-  // 建议：在飞书和AI Studio后台重置密钥后，在控制台用 btoa("新密钥".split('').reverse().join('')) 重新生成此处的值
-  const OBFUSCATED_FS_SECRET = 'SHdrQ3FGMHFrS2M5YXFWVnZCdVBsUVBXTU1Deml2UlE=';
-  const OBFUSCATED_GEMINI_KEY = 'SU9OT3lqYU9mRTlfNXJtVVdpOXRHU2tpYnFFbEpzRUR5U2F6SUE=';
-
+// ── 飞书与大模型配置（明文测试版） ───────────────────────────
   const FEISHU = {
     appId:     'cli_a9248a4017f8dcb3',
-    appSecret: getRealKey(OBFUSCATED_FS_SECRET),
+    appSecret: 'QRvizCMMWPQlPuBvVVqa9cKkq0FqCkwH',
     baseId:    'KiBzbaG9patb0isx4oGcUbPWnOe',
     tableId:   'tblX1j2AaKiDalFp',
     interviewTableId: 'tblrik3BihWl2tIt',
   };
 
-  const GEMINI_KEY = getRealKey(OBFUSCATED_GEMINI_KEY);
+  const GEMINI_KEY = 'AIzaSyDEsJlEqbikSGt9iWUmr5_9EfgaOyjONOI';
+
+  // 这里的 getRealKey 暂时不删，留着备用
+  function getRealKey(obfuscatedStr) {
+    return atob(obfuscatedStr).split('').reverse().join('');
+  }
 
   // ── 代理列表（依次尝试） ───────────────────────────────
   const PROXIES = [
