@@ -958,20 +958,98 @@ ${usedStr}
     return res.json();
   }
 
+  // ── 终极修复：带有三重降级保障的记录查询 ───────────────────────
   async function fetchTodayRecord() {
     try {
       const path = `/bitable/v1/apps/${FEISHU.baseId}/tables/${FEISHU.tableId}/records`;
-      const startTs = new Date(todayStr + 'T00:00:00+08:00').getTime();
-      const endTs   = new Date(todayStr + 'T23:59:59+08:00').getTime();
-      const filter  = `AND(CurrentValue.[日期]>=${startTs},CurrentValue.[日期]<=${endTs})`;
-      const data = await feishuAPI('GET', path + `?filter=${encodeURIComponent(filter)}`);
-      if (data.data && data.data.items && data.data.items.length > 0) {
-        const rec = data.data.items[0];
-        todayRecordId = rec.record_id;
-        return rec.fields;
+      const dateTs = new Date(todayStr + 'T00:00:00+08:00').getTime();
+      const [y, m, d] = todayStr.split('-');
+      
+      // 方案 A：使用飞书标准的 DATE() 函数查询
+      const f1 = `CurrentValue.[日期]=DATE(${parseInt(y)},${parseInt(m)},${parseInt(d)})`;
+      let data = await feishuAPI('GET', path + `?filter=${encodeURIComponent(f1)}`);
+      
+      // 方案 B：如果字段其实是数字，公式报错，则降级为时间戳精确匹配
+      if (data.code && data.code !== 0) {
+        const f2 = `CurrentValue.[日期]=${dateTs}`;
+        data = await feishuAPI('GET', path + `?filter=${encodeURIComponent(f2)}`);
+      }
+      
+      // 方案 C：如果飞书还是拦截，终极降级：直接拉取最近100条记录，用前端强行寻找
+      if (data.code && data.code !== 0) {
+        data = await feishuAPI('GET', path + `?page_size=100`);
+      }
+
+      if (data.data && data.data.items) {
+        // 前端二次校验，确保万无一失
+        const rec = data.data.items.find(item => item.fields['日期'] === dateTs);
+        if (rec) {
+          todayRecordId = rec.record_id;
+          return rec.fields;
+        }
+      }
+    } catch(e) { console.error('fetchTodayRecord 异常', e); }
+    return null;
+  }
+
+  // ── 面经表的同步也应用同样的机制 ─────────────────────────────────
+  async function syncInterviewAnswer(qid) {
+    if (!todayQuestions) return;
+    const q = todayQuestions.find(x => x.id === qid);
+    if (!q) return;
+    const myAnswer = state.reflections[qid] || '';
+    const dateTs = new Date(todayStr + 'T00:00:00+08:00').getTime();
+    const fields = {
+      '日期': dateTs, '题目编号': q.num, '题目类别': q.category, '题目内容': q.title,
+      '答题思路': q.framework, '参考答案': q.reference, '知识点': q.knowledge,
+    };
+    if (myAnswer) fields['我的答案'] = myAnswer;
+
+    const basePath = `/bitable/v1/apps/${FEISHU.baseId}/tables/${FEISHU.interviewTableId}/records`;
+    try {
+      if (!interviewRecordIds[qid]) {
+        try {
+          const [y, m, d] = todayStr.split('-');
+          // A
+          const f1 = `AND(CurrentValue.[日期]=DATE(${parseInt(y)},${parseInt(m)},${parseInt(d)}),CurrentValue.[题目编号]=${q.num})`;
+          let data = await feishuAPI('GET', `${basePath}?filter=${encodeURIComponent(f1)}`);
+          // B
+          if (data.code && data.code !== 0) {
+            const f2 = `AND(CurrentValue.[日期]=${dateTs},CurrentValue.[题目编号]=${q.num})`;
+            data = await feishuAPI('GET', `${basePath}?filter=${encodeURIComponent(f2)}`);
+          }
+          // C
+          if (data.code && data.code !== 0) {
+            data = await feishuAPI('GET', `${basePath}?page_size=100`);
+          }
+
+          if (data.data && data.data.items) {
+            const rec = data.data.items.find(item => item.fields['日期'] === dateTs && item.fields['题目编号'] === q.num);
+            if (rec) {
+              interviewRecordIds[qid] = rec.record_id;
+              lsave('interviewRecordIds_' + todayStr, interviewRecordIds);
+            }
+          }
+        } catch(e) {}
+      }
+
+      // 写入或更新逻辑保持不变
+      if (interviewRecordIds[qid]) {
+        const res = await feishuAPI('PUT', `${basePath}/${interviewRecordIds[qid]}`, { fields });
+        if (res.code === 1254043 || res.code === 1254040) {
+          interviewRecordIds[qid] = null;
+          const r2 = await feishuAPI('POST', basePath, { fields });
+          if (r2.data && r2.data.record) {
+            interviewRecordIds[qid] = r2.data.record.record_id; lsave('interviewRecordIds_' + todayStr, interviewRecordIds);
+          }
+        }
+      } else {
+        const res = await feishuAPI('POST', basePath, { fields });
+        if (res.data && res.data.record) {
+          interviewRecordIds[qid] = res.data.record.record_id; lsave('interviewRecordIds_' + todayStr, interviewRecordIds);
+        }
       }
     } catch(e) {}
-    return null;
   }
 
   const ARTICLE_LINKS = {
@@ -999,51 +1077,6 @@ ${usedStr}
   }
 
   let interviewRecordIds = lload('interviewRecordIds_' + todayStr, {});
-
-  async function syncInterviewAnswer(qid) {
-    if (!todayQuestions) return;
-    const q = todayQuestions.find(x => x.id === qid);
-    if (!q) return;
-    const myAnswer = state.reflections[qid] || '';
-    const dateTs = new Date(todayStr + 'T00:00:00+08:00').getTime();
-    const fields = {
-      '日期': dateTs, '题目编号': q.num, '题目类别': q.category, '题目内容': q.title,
-      '答题思路': q.framework, '参考答案': q.reference, '知识点': q.knowledge,
-    };
-    if (myAnswer) fields['我的答案'] = myAnswer;
-
-    const basePath = `/bitable/v1/apps/${FEISHU.baseId}/tables/${FEISHU.interviewTableId}/records`;
-    try {
-      if (!interviewRecordIds[qid]) {
-        try {
-          const startTs = new Date(todayStr + 'T00:00:00+08:00').getTime();
-          const endTs   = new Date(todayStr + 'T23:59:59+08:00').getTime();
-          const filter  = `AND(CurrentValue.[日期]>=${startTs},CurrentValue.[日期]<=${endTs},CurrentValue.[题目编号]=${q.num})`;
-          const data = await feishuAPI('GET', `${basePath}?filter=${encodeURIComponent(filter)}`);
-          if (data.data && data.data.items && data.data.items.length > 0) {
-            interviewRecordIds[qid] = data.data.items[0].record_id;
-            lsave('interviewRecordIds_' + todayStr, interviewRecordIds);
-          }
-        } catch(e) {}
-      }
-
-      if (interviewRecordIds[qid]) {
-        const res = await feishuAPI('PUT', `${basePath}/${interviewRecordIds[qid]}`, { fields });
-        if (res.code === 1254043 || res.code === 1254040) {
-          interviewRecordIds[qid] = null;
-          const r2 = await feishuAPI('POST', basePath, { fields });
-          if (r2.data && r2.data.record) {
-            interviewRecordIds[qid] = r2.data.record.record_id; lsave('interviewRecordIds_' + todayStr, interviewRecordIds);
-          }
-        }
-      } else {
-        const res = await feishuAPI('POST', basePath, { fields });
-        if (res.data && res.data.record) {
-          interviewRecordIds[qid] = res.data.record.record_id; lsave('interviewRecordIds_' + todayStr, interviewRecordIds);
-        }
-      }
-    } catch(e) {}
-  }
 
   function scheduleSync(interviewQid) {
     setSyncStatus('syncing', '同步中...');
