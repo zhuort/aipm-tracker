@@ -724,18 +724,21 @@
   let interviewRecordIds = lload('interviewRecordIds_' + todayStr, {});
   let weeklyRecordIds = lload('weeklyRecordIds', {});
 
-  // ── API 封装 (Gemini JSON接口) ───────────────────
   // ── API 封装 (Gemini JSON接口，生成学习任务和面经) ───────────────────
   async function askGemini(prompt, fallbackData) {
     try {
+      // 🚨 核心修复 1：偷偷给大模型加一句“紧箍咒”，强制要求合法格式，禁止随意换行
+      const strictPrompt = prompt + "\n【系统强制指令】：请严格输出可被彻底解析的合法 JSON 格式。所有字符串值内部绝对不允许出现真实的换行符，如果需要分段请务必使用 '\\n' 代替！不要输出任何 Markdown 标记。";
+
       const res = await fetch(API_BASE + '/gemini', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          contents: [{ parts: [{ text: prompt }] }],
+          contents: [{ parts: [{ text: strictPrompt }] }],
           generationConfig: { 
             temperature: 0.7,
-            responseMimeType: "application/json" // 强制输出纯 JSON
+            maxOutputTokens: 4000, // 🚨 核心修复 2：给足 4000 个 Token 的额度，坚决防止大模型写到一半被掐断
+            responseMimeType: "application/json"
           }
         })
       });
@@ -744,16 +747,17 @@
       if (!res.ok || data.error) return fallbackData; 
       if (!data.candidates || data.candidates.length === 0) return fallbackData;
 
-      // 🚨 核心修复 1：把大模型切碎的所有文本拼接到一起，防止 JSON 截断报错
       const text = data.candidates[0].content.parts.map(p => p.text).join('');
-      const clean = text.replace(/```json|```/g, '').trim();
+      
+      // 🚨 核心修复 3：再加一层双保险，强制清理大模型可能偷偷加上的 Markdown 标记
+      const clean = text.replace(/```json/gi, '').replace(/```/g, '').trim();
+      
       return JSON.parse(clean);
     } catch(e) {
-      console.error('Gemini JSON 解析失败', e);
-      return fallbackData; // 报错时使用兜底的 1 道题
+      console.error('Gemini JSON 解析失败，已触发兜底保护:', e);
+      return fallbackData; 
     }
   }
-
   // ── API 封装 (Gemini 纯文本接口，用于AI点评) ───────────────────
   async function askGeminiText(prompt, fallbackText) {
     try {
