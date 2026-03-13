@@ -736,15 +736,29 @@
         })
       });
       const data = await res.json();
+      
+      // 🚨 【核心修复】如果接口报错（如 400/403），不要崩溃，直接使用兜底数据
+      if (!res.ok || data.error) {
+        console.error('Gemini API 返回错误:', data.error || res.status);
+        return fallbackData; 
+      }
+      
+      // 防止数据结构异常
+      if (!data.candidates || data.candidates.length === 0) {
+        console.warn('Gemini 返回内容为空');
+        return fallbackData;
+      }
+
       const text = data.candidates[0].content.parts[0].text;
       const clean = text.replace(/```json|```/g, '').trim();
       return JSON.parse(clean);
     } catch(e) {
-      console.error('Gemini JSON请求失败', e);
+      console.error('Gemini JSON 解析或网络失败', e);
+      // 就算报错，也把默认内容展示出来，坚决不让页面白屏
       return fallbackData;
     }
   }
-
+  
   // ── API 封装 (Gemini 纯文本接口，用于AI点评) ───────────────────
   async function askGeminiText(prompt, fallbackText) {
     try {
