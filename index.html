@@ -725,6 +725,7 @@
   let weeklyRecordIds = lload('weeklyRecordIds', {});
 
   // ── API 封装 (Gemini JSON接口) ───────────────────
+  // ── API 封装 (Gemini JSON接口，生成学习任务和面经) ───────────────────
   async function askGemini(prompt, fallbackData) {
     try {
       const res = await fetch(API_BASE + '/gemini', {
@@ -732,33 +733,27 @@
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           contents: [{ parts: [{ text: prompt }] }],
-          generationConfig: { temperature: 0.7, maxOutputTokens: 2000, responseMimeType: "application/json" }
+          generationConfig: { 
+            temperature: 0.7,
+            responseMimeType: "application/json" // 强制输出纯 JSON
+          }
         })
       });
       const data = await res.json();
       
-      // 🚨 【核心修复】如果接口报错（如 400/403），不要崩溃，直接使用兜底数据
-      if (!res.ok || data.error) {
-        console.error('Gemini API 返回错误:', data.error || res.status);
-        return fallbackData; 
-      }
-      
-      // 防止数据结构异常
-      if (!data.candidates || data.candidates.length === 0) {
-        console.warn('Gemini 返回内容为空');
-        return fallbackData;
-      }
+      if (!res.ok || data.error) return fallbackData; 
+      if (!data.candidates || data.candidates.length === 0) return fallbackData;
 
-      const text = data.candidates[0].content.parts[0].text;
+      // 🚨 核心修复 1：把大模型切碎的所有文本拼接到一起，防止 JSON 截断报错
+      const text = data.candidates[0].content.parts.map(p => p.text).join('');
       const clean = text.replace(/```json|```/g, '').trim();
       return JSON.parse(clean);
     } catch(e) {
-      console.error('Gemini JSON 解析或网络失败', e);
-      // 就算报错，也把默认内容展示出来，坚决不让页面白屏
-      return fallbackData;
+      console.error('Gemini JSON 解析失败', e);
+      return fallbackData; // 报错时使用兜底的 1 道题
     }
   }
-  
+
   // ── API 封装 (Gemini 纯文本接口，用于AI点评) ───────────────────
   async function askGeminiText(prompt, fallbackText) {
     try {
@@ -767,28 +762,18 @@
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           contents: [{ parts: [{ text: prompt }] }],
-          generationConfig: { temperature: 0.7, maxOutputTokens: 1000 }
+          generationConfig: { temperature: 0.7 } // 🚨 核心修复 2：去掉 maxOutputTokens 限制，防止强行截断
         })
       });
       const data = await res.json();
 
-      // 🚨 【核心防崩溃】如果接口报错（如 400 失效 或 403 被墙）
-      if (!res.ok || data.error) {
-        console.error('Gemini 点评接口报错:', data.error || res.status);
-        return `⚠️ AI 暂时无法点评 (错误码: ${res.status})。原因可能是 API Key 失效、额度耗尽或节点受限。`;
-      }
+      if (!res.ok || data.error) return `⚠️ AI 暂时无法点评 (错误码: ${res.status})。`;
+      if (data.promptFeedback && data.promptFeedback.blockReason) return `⚠️ 抱歉，内容触发了安全审查。`;
+      if (data.candidates && data.candidates.length > 0 && data.candidates[0].finishReason === 'SAFETY') return `⚠️ AI 生成内容触发了安全审查被中断。`;
 
-      // 拦截敏感词
-      if (data.promptFeedback && data.promptFeedback.blockReason) {
-        return `⚠️ 抱歉，你的答案可能包含了敏感词汇，触发了安全审查。请修改后重试。`;
-      }
-      if (data.candidates && data.candidates.length > 0 && data.candidates[0].finishReason === 'SAFETY') {
-        return `⚠️ 抱歉，AI 生成内容触发了安全审查被强制中断。`;
-      }
-
-      // 正常输出
       if (data.candidates && data.candidates[0].content) {
-        return data.candidates[0].content.parts[0].text.trim();
+        // 🚨 核心修复 3：把所有点评的碎片拼接成完整的长段落
+        return data.candidates[0].content.parts.map(p => p.text).join('').trim();
       }
       return fallbackText;
     } catch(e) {
@@ -796,7 +781,7 @@
       return fallbackText;
     }
   }
-
+  
   // ── 获取飞书 Token ─────────────────────────────────────
   async function getToken() {
     if (token) return token;
