@@ -837,13 +837,97 @@
   function renderWeekly(weekly, weekNum) {
     const container = document.getElementById('weekly-container');
     if (!container) return;
+    
     container.innerHTML = weekly.goals.map((g, i) => {
       const n = i + 1;
-      const isDone = state.weekly && state.weekly[`w${weekNum}_${n}`];
-      return `<div class="weekly-block" style="${isDone ? '' : 'background:var(--card-bg);color:var(--ink);border:1px solid var(--border);'}"><div class="weekly-label" style="${isDone ? '' : 'color:var(--muted);'}">📌 第 ${weekNum} 周 · 目标 ${n}　<span style="font-family:\'Space Mono\',monospace;font-size:9px;letter-spacing:1px;">${weekly.theme}</span></div><div class="weekly-title">${g.title}</div><div class="weekly-desc" style="${isDone ? '' : 'color:var(--muted);'}">${g.desc}</div><button class="weekly-check-btn" id="weekly-btn-${n}" onclick="toggleWeeklyDynamic(${weekNum},${n})" style="${isDone ? '' : 'border-color:var(--muted);color:var(--muted);'}">${isDone ? '已完成 ✓' : '标记完成'}</button></div>${i < weekly.goals.length - 1 ? '<div style="height:16px;"></div>' : ''}`;
+      const key = `w${weekNum}_${n}`;
+      const isDone = state.weekly && state.weekly[key];
+      // 从 state 中读取之前保存的内容
+      const savedContent = (state.reflections && state.reflections[key]) || '';
+
+      return `
+        <div class="weekly-block" style="${isDone ? '' : 'background:var(--card-bg);color:var(--ink);border:1px solid var(--border);'}">
+          <div class="weekly-label" style="${isDone ? '' : 'color:var(--muted);'}">
+            📌 第 ${weekNum} 周 · 目标 ${n}　
+            <span style="font-family:'Space Mono',monospace;font-size:9px;letter-spacing:1px;">${weekly.theme}</span>
+          </div>
+          <div class="weekly-title">${g.title}</div>
+          <div class="weekly-desc" style="${isDone ? '' : 'color:var(--muted);'}">${g.desc}</div>
+          
+          <div style="margin-top:12px;">
+            <textarea class="reflection-input" 
+              placeholder="记录你的产出内容（如链接、笔记摘要）..." 
+              oninput="saveWeeklyContent('${key}', this.value, ${weekNum})"
+              style="min-height:60px; font-size:12px; border-color:${isDone ? 'var(--gold)' : 'var(--border)'}">${savedContent}</textarea>
+          </div>
+
+          <button class="weekly-check-btn" id="weekly-btn-${n}" 
+            onclick="toggleWeeklyDynamic(${weekNum},${n})" 
+            style="${isDone ? '' : 'border-color:var(--muted);color:var(--muted);'}">
+            ${isDone ? '已完成 ✓' : '标记完成'}
+          </button>
+        </div>
+        <div style="height:16px;"></div>`;
     }).join('');
   }
 
+  async function syncWeeklyToFeishu(weekNum) {
+    setSyncStatus('syncing', '同步周目标详情...');
+    const keyPrefix = `w${weekNum}_`;
+    
+    // 汇总已完成的项
+    const doneIndexes = [1, 2, 3, 4].filter(n => state.weekly[keyPrefix + n]);
+    
+    // 汇总所有输入的内容详情
+    const details = [1, 2, 3, 4]
+      .filter(n => state.reflections[keyPrefix + n])
+      .map(n => `【目标${n}】\n${state.reflections[keyPrefix + n]}`)
+      .join('\n\n');
+
+    const fields = {
+      '周序号': 'w' + weekNum,
+      '已完成项': doneIndexes.join(',') || '无',
+      '提交详情': details || '暂无内容' // 👈 对应你新增的字段
+    };
+
+    const basePath = `/bitable/v1/apps/${FEISHU.baseId}/tables/${FEISHU.weeklyTableId}/records`;
+
+    try {
+      if (!weeklyRecordIds['w'+weekNum]) {
+        const filter = `CurrentValue.[周序号]="w${weekNum}"`;
+        const data = await feishuAPI('GET', `${basePath}?filter=${encodeURIComponent(filter)}`);
+        if (data.data && data.data.items && data.data.items.length > 0) {
+          weeklyRecordIds['w'+weekNum] = data.data.items[0].record_id;
+          lsave('weeklyRecordIds', weeklyRecordIds);
+        }
+      }
+
+      if (weeklyRecordIds['w'+weekNum]) {
+        await feishuAPI('PUT', `${basePath}/${weeklyRecordIds['w'+weekNum]}`, { fields });
+      } else {
+        const res = await feishuAPI('POST', basePath, { fields });
+        if (res.data && res.data.record) {
+          weeklyRecordIds['w'+weekNum] = res.data.record.record_id;
+          lsave('weeklyRecordIds', weeklyRecordIds);
+        }
+      }
+      setSyncStatus('ok', '周目标已更新 ✓');
+    } catch(e) { setSyncStatus('err', '周目标同步失败'); }
+  }
+
+// 保存周目标输入的内容
+  function saveWeeklyContent(key, val, weekNum) {
+    if (!state.reflections) state.reflections = {};
+    state.reflections[key] = val;
+    lsave('state', state);
+    
+    // 防抖同步到飞书
+    clearTimeout(syncTimeout);
+    syncTimeout = setTimeout(() => {
+      syncWeeklyToFeishu(weekNum);
+    }, 1500);
+  }
+  
   function toggleWeeklyDynamic(weekNum, n) {
     const key = `w${weekNum}_${n}`;
     if (!state.weekly) state.weekly = {};
