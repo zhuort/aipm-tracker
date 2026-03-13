@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>AI PM成长计划</title>
+<title>茹婷的AI PM成长计划</title>
 <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@400;700&family=Space+Mono:wght@400;700&family=Noto+Sans+SC:wght@300;400;500&display=swap" rel="stylesheet">
 <style>
   :root {
@@ -430,6 +430,29 @@
     background: var(--gold);
     color: var(--ink);
   }
+  
+  /* 周目标专属输入框 */
+  .weekly-input {
+    width: 100%;
+    border: 1px solid var(--border);
+    background: rgba(255, 255, 255, 0.6);
+    padding: 10px;
+    font-family: 'Noto Sans SC', sans-serif;
+    font-size: 12px;
+    color: var(--ink);
+    resize: vertical;
+    min-height: 70px;
+    outline: none;
+    border-radius: 2px;
+    margin-top: 10px;
+    transition: all 0.2s;
+  }
+
+  .weekly-input:focus {
+    border-color: var(--gold);
+    background: white;
+    box-shadow: 0 2px 8px rgba(212, 168, 67, 0.1);
+  }
 
   /* Section header */
   .section-hd {
@@ -511,7 +534,7 @@
 <div class="header">
   <div class="header-top">
     <div>
-      <div class="header-title"> AI PM 成长计划</div>
+      <div class="header-title">茹婷的 AI PM 成长计划</div>
       <div class="header-subtitle">Bank PM → AI PM · 每日打卡</div>
     </div>
     <div style="display:flex;flex-direction:column;align-items:flex-end;gap:4px;">
@@ -638,17 +661,18 @@
 </div>
 
 <script>
-  // ── 核心配置：你的专属微服务地址与基础配置 ──────────────────────
+  // ── 核心配置：专属微服务地址与基础配置 ──────────────────────
   const API_BASE = 'https://aipm-api.rutingzhuo05.workers.dev';
   
   const FEISHU = {
-    appId:     'cli_a9248a4017f8dcb3',
-    baseId:    'KiBzbaG9patb0isx4oGcUbPWnOe',
-    tableId:   'tblX1j2AaKiDalFp',
+    appId:            'cli_a9248a4017f8dcb3',
+    baseId:           'KiBzbaG9patb0isx4oGcUbPWnOe',
+    tableId:          'tblX1j2AaKiDalFp',
     interviewTableId: 'tblrik3BihWl2tIt',
+    weeklyTableId:    'tblYzYS7D7vEqNdf',
   };
 
-  // ── 日期计算 ──────────────────────
+  // ── 日期计算（修复时区问题） ──────────────────────
   const now = new Date();
   const offset = now.getTimezoneOffset() * 60000;
   const localISOTime = (new Date(now.getTime() - offset)).toISOString().slice(0, -1);
@@ -666,7 +690,7 @@
 
   function checkGlobalAuth() {
     if (isAuthorized) return true;
-    const input = prompt('🔐  AI PM 成长空间\n请输入专属打卡密码：');
+    const input = prompt('🔐 茹婷的 AI PM 成长空间\n请输入专属打卡密码：');
     if (input === CORRECT_PWD) {
       isAuthorized = true;
       lsave('authorized', true);
@@ -678,7 +702,25 @@
     }
   }
 
-  // ── 通过专属 Worker 请求大模型 ─────────────────────────
+  // ── 状态指示器 ────────────────────────────────────
+  function setSyncStatus(status, msg) {
+    const el = document.getElementById('syncStatus');
+    if (!el) return;
+    const colors = { syncing: '#d4a843', ok: '#3a7d44', err: '#c84b2f', offline: '#8a7d6e' };
+    el.style.color = colors[status] || '#8a7d6e';
+    el.textContent = msg;
+  }
+
+  // ── 全局状态存储 ───────────────────────────────────────────────
+  let state = lload('state', { done: {}, reflections: {}, exercises: {}, weekly: {} });
+  let dayDone = lload('dayDone', []);
+  let token = null;
+  let syncTimeout = null;
+  let todayRecordId = lload('recordId_' + todayStr, null);
+  let interviewRecordIds = lload('interviewRecordIds_' + todayStr, {});
+  let weeklyRecordIds = lload('weeklyRecordIds', {});
+
+  // ── API 封装 (Gemini 与 飞书，全部走 Worker) ───────────────────
   async function askGemini(prompt, fallbackData) {
     try {
       const res = await fetch(API_BASE + '/gemini', {
@@ -699,44 +741,55 @@
     }
   }
 
-  const Q_CATEGORIES = ['AI技术实操及AI知识面', '项目/产品经验类', '产品核心方法论', '行业/业务/趋势认知类'];
-  let usedTitles = lload('usedTitles', []);
+  async function getToken() {
+    if (token) return token;
+    try {
+      const res = await fetch(API_BASE + '/feishu/auth/v3/tenant_access_token/internal', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ app_id: FEISHU.appId }) 
+      });
+      const data = await res.json();
+      if (data.tenant_access_token) {
+        token = data.tenant_access_token;
+        setTimeout(() => { token = null; }, 110 * 60 * 1000);
+        return token;
+      }
+    } catch(e) { console.error('Token获取失败', e); }
+    return null;
+  }
 
-  // ── 生成各类内容 ───────────────────
+  async function feishuAPI(method, path, body) {
+    const tk = await getToken();
+    if (!tk) throw new Error('no token');
+    const opts = {
+      method,
+      headers: { 'Authorization': 'Bearer ' + tk, 'Content-Type': 'application/json' }
+    };
+    if (body) opts.body = JSON.stringify(body);
+    const res = await fetch(API_BASE + '/feishu' + path, opts);
+    return res.json();
+  }
+
+  // ── 生成：每日学习任务 (Day 1-3) ──────────────────────────────
   async function generateDay1WithGemini() {
     const cached = lload('day1_' + todayStr, null);
     if (cached) { renderDay1(cached); return; }
-    
     const prompt = `你是一位AI产品经理成长导师。今天是${todayStr}，请为以下学员生成一篇今日AI前沿动态摘要：
-学员背景：卓**，宁波银行产品经理，正在转型AI产品经理，有金融智能客服（ASR+RAG+NER）经验。
+学员背景：卓茹婷，宁波银行产品经理，正在转型AI产品经理，有金融智能客服（ASR+RAG+NER）经验。
 要求：
-1. 选取今天最值得关注的1个AI技术/产品进展（近期真实动态）
-2. 用金融AI PM的视角解读，结合她的背景说明为什么重要
-3. 提炼3个她需要记住的关键点，每个关键点结合她的坐席辅助/银行经验
-4. 给出1道思考题，引导她用今天的内容重新审视自己的项目经历
+1. 选取今天最值得关注的1个AI技术/产品进展
+2. 用金融AI PM的视角解读，说明为什么重要
+3. 提炼3个关键点，结合她的银行经验
+4. 给出1道思考题
 请严格按以下JSON格式返回，不要有任何其他文字：
 {
   "title": "今日主题标题",
-  "summary": "3-4句话的核心摘要，说明这个进展是什么、为什么重要",
-  "keypoints": [
-    {"label": "关键点标题", "content": "具体内容，结合金融背景"},
-    {"label": "关键点标题", "content": "具体内容"},
-    {"label": "关键点标题", "content": "具体内容"}
-  ],
+  "summary": "3-4句话的核心摘要",
+  "keypoints": [ {"label": "标题", "content": "具体内容"} ],
   "reflection": "思考题内容"
 }`;
-
-    const fallback = {
-      title: 'AI Agent 正在重塑金融客服基础设施',
-      summary: '2026年AI Agent从概念走向大规模落地，金融行业智能客服正在经历从"问答机器人"到"自主服务Agent"的跃迁。坐席辅助、智能外呼、合规审查等场景都在被重构。',
-      keypoints: [
-        { label: 'Agent ≠ 聊天机器人', content: 'Agent能循环调用工具、自主规划步骤。你的坐席辅助（意图识别→RAG推荐→工单NER）已是早期Agent形态，面试时要主动用Agent语言表达。' },
-        { label: 'MCP成为工具调用标准', content: 'MCP统一了AI工具调用方式，就像REST API统一接口。你的下一个产品方案可以考虑用MCP打通行内CRM/知识库/工单系统。' },
-        { label: '数据质量是核心壁垒', content: '32%团队把输出质量列为第一障碍。你在金融场景做Badcase分析、AB测试的经验，是外部AI PM没有的稀缺竞争力。' }
-      ],
-      reflection: '如果用Agent重新设计你的坐席辅助系统，你会把哪些步骤拆解为独立工具调用？MCP架构下系统边界会发生什么变化？'
-    };
-
+    const fallback = { title: 'AI Agent 重塑金融客服', summary: '金融行业智能客服正在经历从"问答机器人"到"自主服务Agent"的跃迁。', keypoints: [{ label: 'Agent ≠ 聊天机器人', content: 'Agent能自主规划步骤。' }], reflection: '如果用Agent重构坐席辅助，你会怎么做？' };
     const article = await askGemini(prompt, fallback);
     lsave('day1_' + todayStr, article);
     renderDay1(article);
@@ -745,22 +798,7 @@
   function renderDay1(article) {
     const container = document.getElementById('day1-content');
     if (!container) return;
-    container.innerHTML = `
-      <div class="article-block">
-        <div class="article-meta">📰 今日前沿 · AI 动态</div>
-        <div class="article-title">${article.title}</div>
-        <div class="article-summary">
-          <p><span class="tag tag-blue">今日摘要</span>${article.summary}</p>
-        </div>
-      </div>
-      <div class="keypoints">
-        <div class="keypoints-title">🔑 你需要记住的 3 个关键点</div>
-        ${article.keypoints.map(kp => `
-          <div class="keypoint">
-            <div class="keypoint-dot"></div>
-            <div class="keypoint-text"><strong>${kp.label}</strong>：${kp.content}</div>
-          </div>`).join('')}
-      </div>`;
+    container.innerHTML = `<div class="article-block"><div class="article-meta">📰 今日前沿 · AI 动态</div><div class="article-title">${article.title}</div><div class="article-summary"><p><span class="tag tag-blue">今日摘要</span>${article.summary}</p></div></div><div class="keypoints"><div class="keypoints-title">🔑 你需要记住的关键点</div>${article.keypoints.map(kp => `<div class="keypoint"><div class="keypoint-dot"></div><div class="keypoint-text"><strong>${kp.label}</strong>：${kp.content}</div></div>`).join('')}</div>`;
     const rq = document.getElementById('day1-reflection-q');
     if (rq) rq.textContent = article.reflection;
   }
@@ -768,16 +806,12 @@
   async function generateDay2WithGemini() {
     const cached = lload('day2_' + todayStr, null);
     if (cached) { renderDay2(cached); return; }
-    
-    const products = ['Cursor', 'Perplexity', 'Linear', 'Descript', 'Gamma', 'Runway', 'Glean', 'Rewind', 'Harvey', 'Otter.ai', 'Figma AI', 'Canva AI'];
+    const products = ['Cursor', 'Perplexity', 'Linear', 'Descript', 'Gamma'];
     const start = new Date('2026-03-10');
     const dayIndex = Math.floor((new Date(todayStr) - start) / 86400000);
     const product = products[dayIndex % products.length];
-    
-    const prompt = `你是一位AI产品经理成长导师。请帮以下学员拆解一款非金融AI产品：\n\n学员背景：卓**，宁波银行产品经理，转型AI PM，有金融智能客服（ASR+RAG+NER）经验。\n\n今日拆解产品：${product}\n\n请从金融PM的视角拆解，提炼3个可迁移的产品设计思路，并给出1道思考题。\n\n请严格按以下JSON格式返回，不要有任何其他文字：\n{\n  "product": "${product}",\n  "title": "一句话描述这个产品的核心价值",\n  "summary": "3-4句话：产品是什么、AI能力如何体现、商业逻辑",\n  "keypoints": [\n    {"label": "迁移视角标题", "content": "结合金融背景的具体迁移思路"},\n    {"label": "迁移视角标题", "content": "具体内容"},\n    {"label": "迁移视角标题", "content": "具体内容"}\n  ],\n  "reflection": "思考题"\n}`;
-    
-    const fallback = { product: 'Cursor', title: '让编程效率提升10倍的AI代码编辑器', summary: 'Cursor把AI深度嵌入代码编辑器，能理解整个项目上下文、自主修改多个文件。核心是"AI了解你的代码库"而不是孤立回答问题，商业上以订阅制快速增长。', keypoints: [{ label: '上下文感知 = 客户画像系统', content: 'Cursor能理解整个代码库上下文，类似你的智能营销系统需要理解客户全生命周期行为。核心设计问题：AI的上下文窗口如何高效管理？' }, { label: '嵌入工作流而非独立产品', content: 'Cursor不要求用户切换工具，AI就在编辑器里。你的坐席辅助也是这个逻辑——坐席不需要离开工作台就能获取话术推荐。' }, { label: '人机协同的置信度设计', content: 'Cursor生成代码后用户可以一键接受/拒绝/修改，类似你的话术采纳率指标设计。' }], reflection: 'Cursor通过理解整个代码库来提供精准建议。你的RAG话术推荐系统如何扩大"上下文理解范围"，除了当前对话还能引入哪些信号？' };
-
+    const prompt = `你是一位AI导师。请帮学员(转型AI PM,有智能客服经验)拆解非金融AI产品：${product}。请严格按JSON返回：\n{"product": "${product}", "title": "...", "summary": "...", "keypoints": [{"label":"...", "content":"..."}], "reflection": "..."}`;
+    const fallback = { product: 'Cursor', title: '提升10倍效率的编辑器', summary: 'AI深度嵌入编辑器', keypoints: [{ label: '上下文感知', content: '理解全局代码' }], reflection: '你的系统如何扩大上下文理解？' };
     const article = await askGemini(prompt, fallback);
     lsave('day2_' + todayStr, article);
     renderDay2(article);
@@ -786,7 +820,7 @@
   function renderDay2(article) {
     const container = document.getElementById('day2-content');
     if (!container) return;
-    container.innerHTML = `<div class="article-block"><div class="article-meta">🔍 产品拆解 · 今日案例：${article.product}</div><div class="article-title">${article.title}</div><div class="article-summary"><p><span class="tag tag-blue">产品概览</span>${article.summary}</p></div></div><div class="keypoints"><div class="keypoints-title">🔑 金融 PM 的借鉴视角</div>${article.keypoints.map(kp => `<div class="keypoint"><div class="keypoint-dot"></div><div class="keypoint-text"><strong>${kp.label}</strong>：${kp.content}</div></div>`).join('')}</div>`;
+    container.innerHTML = `<div class="article-block"><div class="article-meta">🔍 产品拆解 · 今日案例：${article.product}</div><div class="article-title">${article.title}</div><div class="article-summary"><p><span class="tag tag-blue">产品概览</span>${article.summary}</p></div></div><div class="keypoints"><div class="keypoints-title">🔑 借鉴视角</div>${article.keypoints.map(kp => `<div class="keypoint"><div class="keypoint-dot"></div><div class="keypoint-text"><strong>${kp.label}</strong>：${kp.content}</div></div>`).join('')}</div>`;
     const rq = document.getElementById('day2-reflection-q');
     if (rq) rq.textContent = article.reflection;
   }
@@ -794,16 +828,12 @@
   async function generateDay3WithGemini() {
     const cached = lload('day3_' + todayStr, null);
     if (cached) { renderDay3(cached); return; }
-    
-    const projects = ['坐席辅助系统（ASR+BERT意图识别+RAG话术推荐+NER工单）', '视频银行产品（远程开户/面签/客服）', 'IVR国产化迁移（话术/路由/配置平台化）', '智能营销系统（客群筛选+旅程经营+效果归因）'];
+    const projects = ['坐席辅助系统', '视频银行产品', '智能营销系统'];
     const start = new Date('2026-03-10');
     const dayIndex = Math.floor((new Date(todayStr) - start) / 86400000);
     const project = projects[dayIndex % projects.length];
-    
-    const prompt = `你是一位AI产品经理简历优化专家。请帮以下候选人用AI原生语言重新表达她的项目经历：\n\n候选人：卓**，宁波银行/广州农商行产品经理，4年金融科技经验，目标转型AI PM。\n\n今日练习项目：${project}\n\n请提供旧表达→新表达的对比示例，并给出今日输出任务。\n\n请严格按以下JSON格式返回，不要有任何其他文字：\n{\n  "project": "${project}",\n  "old_expression": "旧表达示例（1-2句）",\n  "new_expression": "新表达示例（2-3句，体现架构思维/数据飞轮/Agent范式）",\n  "highlights": [\n    {"label": "亮点标题", "content": "说明为什么这样表达更好"},\n    {"label": "亮点标题", "content": "说明"},\n    {"label": "亮点标题", "content": "说明"}\n  ],\n  "task": "今日输出任务描述"\n}`;
-    
-    const fallback = { project: '坐席辅助系统', old_expression: '基于BERT/NLP定义了14个业务意图分类，准确率从35%提升至85%，搭建话术推荐系统提升坐席效率。', new_expression: '设计了3层Intent Agent：①流式ASR实时转写；②微调BERT做14分类意图路由；③低置信度时触发人机协同兜底。通过Badcase驱动的数据飞轮将意图准确率35%→85%，并基于向量数据库构建RAG话术推荐，实现上下文感知的实时策略检索。', highlights: [{ label: '架构分层思维', content: '新表达把系统拆成感知层/决策层/执行层，体现AI PM对技术架构的理解深度。' }, { label: '数据飞轮意识', content: '"Badcase驱动"说明你懂得如何用线上数据持续改进模型，这是AI产品的核心竞争力。' }, { label: 'Agent范式理解', content: '"低置信度触发人机协同"体现了对AI能力边界的清醒认知和优雅的降级策略设计。' }], task: '选择你简历中今日项目的一个具体功能点，参照以上"新表达"框架，用AI原生语言重写2-3句，发给我点评。' };
-
+    const prompt = `你是一位AI PM简历优化专家。帮学员重新表达经历：${project}。请按JSON返回：\n{"project": "${project}", "old_expression": "...", "new_expression": "...", "highlights": [{"label":"...","content":"..."}], "task": "..."}`;
+    const fallback = { project: '坐席辅助系统', old_expression: '基于BERT意图识别提升效率', new_expression: '设计Intent Agent完成路由与RAG话术推荐', highlights: [{ label: 'Agent思维', content: '体现AI新范式' }], task: '重写一行你的简历' };
     const article = await askGemini(prompt, fallback);
     lsave('day3_' + todayStr, article);
     renderDay3(article);
@@ -812,26 +842,31 @@
   function renderDay3(article) {
     const container = document.getElementById('day3-content');
     if (!container) return;
-    container.innerHTML = `<div class="article-block"><div class="article-meta">✍️ 简历重写训练 · 今日项目：${article.project}</div><div class="article-title">用 AI 原生语言重新表达你的经历</div><div class="article-summary"><p><span class="tag tag-red">❌ 旧表达</span>${article.old_expression}</p><p style="margin-top:12px;"><span class="tag tag-green">✅ 新表达</span>${article.new_expression}</p></div></div><div class="keypoints"><div class="keypoints-title">🔑 新表达体现的 3 个 AI PM 思维</div>${article.highlights.map(h => `<div class="keypoint"><div class="keypoint-dot"></div><div class="keypoint-text"><strong>${h.label}</strong>：${h.content}</div></div>`).join('')}</div>`;
+    container.innerHTML = `<div class="article-block"><div class="article-meta">✍️ 简历训练 · ${article.project}</div><div class="article-title">用 AI 原生语言重新表达</div><div class="article-summary"><p><span class="tag tag-red">❌ 旧表达</span>${article.old_expression}</p><p style="margin-top:12px;"><span class="tag tag-green">✅ 新表达</span>${article.new_expression}</p></div></div><div class="keypoints"><div class="keypoints-title">🔑 亮点</div>${article.highlights.map(h => `<div class="keypoint"><div class="keypoint-dot"></div><div class="keypoint-text"><strong>${h.label}</strong>：${h.content}</div></div>`).join('')}</div>`;
     const rq = document.getElementById('day3-reflection-q');
     if (rq) rq.textContent = article.task;
   }
 
+  // ── 生成：周目标与 UI 渲染 ────────────────────────────────────
   async function generateWeeklyWithGemini() {
     const start = new Date('2026-03-10');
     const dayIndex = Math.floor((new Date(todayStr) - start) / 86400000);
     const weekNum = Math.floor(dayIndex / 7) + 1;
     const cacheKey = 'weekly_w' + weekNum;
     const cached = lload(cacheKey, null);
-    if (cached) { renderWeekly(cached, weekNum); return; }
+    if (cached) { 
+      renderWeekly(cached, weekNum); 
+      loadWeeklyFromFeishu(weekNum);
+      return; 
+    }
     
-    const prompt = `你是一位AI产品经理转型教练。请为以下学员生成第${weekNum}周的4个学习目标：\n\n学员背景：卓**，宁波银行产品经理，目标转型AI PM，4年金融科技经验，已坚持学习${weekNum - 1}周。\n\n第${weekNum}周目标要求：结合她当前转型阶段，制定合适难度、具体可执行、有明确产出物的4个目标。\n\n请严格按以下JSON格式返回，不要有任何其他文字：\n{\n  "week": ${weekNum},\n  "theme": "本周主题（4-8字）",\n  "goals": [\n    {"title": "目标标题", "desc": "具体说明，包含产出物和执行建议"},\n    {"title": "目标标题", "desc": "具体说明"},\n    {"title": "目标标题", "desc": "具体说明"},\n    {"title": "目标标题", "desc": "具体说明"}\n  ]\n}`;
-    
-    const fallback = { week: weekNum, theme: 'AI PM 知识建立', goals: [{ title: '写一篇行业文章', desc: '把你的RAG落地经验写成文章发布在知乎/即刻，建立行业可见度。' }, { title: '整理AI产品方法论', desc: '把4年积累的AI产品工作方法做成可视化框架图，用于面试白板讲解。' }, { title: '投递3家目标公司', desc: '选3家目标公司，对照JD找能力Gap，制定补足计划。' }, { title: '准备1道核心面试题', desc: '准备「用Agent重设计坐席辅助」的完整答案，包含架构图和数据闭环设计。' }] };
+    const prompt = `你是一位AI产品经理转型教练。请为学员生成第${weekNum}周的4个学习目标。学员背景：转型AI PM，4年金融经验。按JSON返回：\n{"week": ${weekNum}, "theme": "本周主题", "goals": [{"title": "...", "desc": "..."}, {"title": "...", "desc": "..."}, {"title": "...", "desc": "..."}, {"title": "...", "desc": "..."}]}`;
+    const fallback = { week: weekNum, theme: 'AI PM 知识建立', goals: [{ title: '写一篇行业文章', desc: '分享经验' }, { title: '整理产品方法论', desc: '可视化框架' }, { title: '投递目标公司', desc: '找能力Gap' }, { title: '准备核心面试题', desc: '打磨答案' }] };
 
     const weekly = await askGemini(prompt, fallback);
     lsave(cacheKey, weekly);
     renderWeekly(weekly, weekNum);
+    loadWeeklyFromFeishu(weekNum); // 生成后加载云端进度
   }
 
   function renderWeekly(weekly, weekNum) {
@@ -842,7 +877,6 @@
       const n = i + 1;
       const key = `w${weekNum}_${n}`;
       const isDone = state.weekly && state.weekly[key];
-      // 从 state 中读取之前保存的内容
       const savedContent = (state.reflections && state.reflections[key]) || '';
 
       return `
@@ -854,11 +888,14 @@
           <div class="weekly-title">${g.title}</div>
           <div class="weekly-desc" style="${isDone ? '' : 'color:var(--muted);'}">${g.desc}</div>
           
-          <div style="margin-top:12px;">
-            <textarea class="reflection-input" 
-              placeholder="记录你的产出内容（如链接、笔记摘要）..." 
+          <div style="margin-top:15px;">
+            <div style="font-family:'Space Mono',monospace;font-size:9px;color:var(--gold);text-transform:uppercase;margin-bottom:5px;letter-spacing:1px;">
+              Document / Output
+            </div>
+            <textarea class="weekly-input" 
+              placeholder="贴入文章链接、笔记要点或完成说明..." 
               oninput="saveWeeklyContent('${key}', this.value, ${weekNum})"
-              style="min-height:60px; font-size:12px; border-color:${isDone ? 'var(--gold)' : 'var(--border)'}">${savedContent}</textarea>
+              style="border-color:${isDone ? 'var(--gold)' : 'var(--border)'}">${savedContent}</textarea>
           </div>
 
           <button class="weekly-check-btn" id="weekly-btn-${n}" 
@@ -871,466 +908,51 @@
     }).join('');
   }
 
-  async function syncWeeklyToFeishu(weekNum) {
-    setSyncStatus('syncing', '同步周目标详情...');
-    const keyPrefix = `w${weekNum}_`;
-    
-    // 汇总已完成的项
-    const doneIndexes = [1, 2, 3, 4].filter(n => state.weekly[keyPrefix + n]);
-    
-    // 汇总所有输入的内容详情
-    const details = [1, 2, 3, 4]
-      .filter(n => state.reflections[keyPrefix + n])
-      .map(n => `【目标${n}】\n${state.reflections[keyPrefix + n]}`)
-      .join('\n\n');
-
-    const fields = {
-      '周序号': 'w' + weekNum,
-      '已完成项': doneIndexes.join(',') || '无',
-      '提交详情': details || '暂无内容' // 👈 对应你新增的字段
-    };
-
-    const basePath = `/bitable/v1/apps/${FEISHU.baseId}/tables/${FEISHU.weeklyTableId}/records`;
-
-    try {
-      if (!weeklyRecordIds['w'+weekNum]) {
-        const filter = `CurrentValue.[周序号]="w${weekNum}"`;
-        const data = await feishuAPI('GET', `${basePath}?filter=${encodeURIComponent(filter)}`);
-        if (data.data && data.data.items && data.data.items.length > 0) {
-          weeklyRecordIds['w'+weekNum] = data.data.items[0].record_id;
-          lsave('weeklyRecordIds', weeklyRecordIds);
-        }
-      }
-
-      if (weeklyRecordIds['w'+weekNum]) {
-        await feishuAPI('PUT', `${basePath}/${weeklyRecordIds['w'+weekNum]}`, { fields });
-      } else {
-        const res = await feishuAPI('POST', basePath, { fields });
-        if (res.data && res.data.record) {
-          weeklyRecordIds['w'+weekNum] = res.data.record.record_id;
-          lsave('weeklyRecordIds', weeklyRecordIds);
-        }
-      }
-      setSyncStatus('ok', '周目标已更新 ✓');
-    } catch(e) { setSyncStatus('err', '周目标同步失败'); }
-  }
-
-// 保存周目标输入的内容
-  function saveWeeklyContent(key, val, weekNum) {
-    if (!state.reflections) state.reflections = {};
-    state.reflections[key] = val;
-    lsave('state', state);
-    
-    // 防抖同步到飞书
-    clearTimeout(syncTimeout);
-    syncTimeout = setTimeout(() => {
-      syncWeeklyToFeishu(weekNum);
-    }, 1500);
-  }
-  
   function toggleWeeklyDynamic(weekNum, n) {
     const key = `w${weekNum}_${n}`;
     if (!state.weekly) state.weekly = {};
     state.weekly[key] = !state.weekly[key];
     const btn = document.getElementById('weekly-btn-' + n);
-    if (btn) { btn.textContent = state.weekly[key] ? '已完成 ✓' : '标记完成'; btn.style.borderColor = state.weekly[key] ? '' : 'var(--muted)'; btn.style.color = state.weekly[key] ? '' : 'var(--muted)'; }
-    scheduleSync();
+    if (btn) { 
+      btn.textContent = state.weekly[key] ? '已完成 ✓' : '标记完成'; 
+      btn.style.borderColor = state.weekly[key] ? '' : 'var(--muted)'; 
+      btn.style.color = state.weekly[key] ? '' : 'var(--muted)'; 
+    }
+    syncWeeklyToFeishu(weekNum);
   }
 
-  async function generateQuestionsWithGemini() {
-    const start = new Date('2026-03-10');
-    const today = new Date(todayStr);
-    const dayIndex = Math.floor((today - start) / 86400000);
-    const category = Q_CATEGORIES[Math.floor(dayIndex / 8) % Q_CATEGORIES.length];
-    const usedStr = usedTitles.length > 0 ? `\n已出过的题目（不要重复）：\n${usedTitles.slice(-30).join('\n')}` : '';
-
-    const prompt = `你是一位资深AI产品经理面试官。请为以下候选人生成2道面试题：
-候选人背景：卓**，29岁，宁波银行产品经理，4年金融科技经验。主导过坐席辅助系统（ASR+BERT意图识别+RAG话术推荐+NER工单）、视频银行、IVR国产化迁移、智能营销系统等项目。目标转型为AI产品经理。
-题目类别：${category}
-${usedStr}
-请严格按照以下JSON格式返回，不要有任何其他文字：
-[
-  {
-    "title": "题目内容",
-    "framework": "答题框架（分步骤，每步用\\n分隔）",
-    "reference": "参考答案（结合候选人金融背景，详细具体）",
-    "knowledge": "涉及知识点（用 · 分隔）"
-  },
-  {
-    "title": "题目内容",
-    "framework": "答题框架",
-    "reference": "参考答案",
-    "knowledge": "涉及知识点"
-  }
-]`;
-
-    const fallback = [
-      { title: '请介绍一下你对大模型Agent的理解，以及在金融场景的应用可能性？', framework: '① Agent定义与核心能力\n② 与传统RPA/规则引擎的区别\n③ 金融场景应用案例\n④ 落地挑战与解决思路', reference: 'Agent是具备自主规划、工具调用、多步执行能力的LLM应用。与传统自动化相比，Agent能处理非结构化输入和动态决策。金融场景：智能客服Agent（意图→查询→回复）、合规审查Agent、投研报告Agent。落地挑战：幻觉风险、合规审计、成本控制。', knowledge: 'LLM Agent · 工具调用 · ReAct框架 · 金融AI应用 · 幻觉控制' },
-      { title: '如何评估一个AI产品的效果？你用过哪些指标？', framework: '① 技术指标（模型层）\n② 产品指标（体验层）\n③ 业务指标（价值层）\n④ 结合你的坐席辅助项目举例', reference: '技术层：准确率/召回率/F1、响应时延、幻觉率。产品层：用户满意度、任务完成率、转人工率。业务层：处理量提升、人力成本节省、NPS。坐席辅助实践：以话术采纳率作为核心指标，结合通话时长和客户满意度构建评估体系。', knowledge: '模型评估指标 · F1 Score · 业务价值度量 · AB测试 · 数据闭环' }
-    ];
-
-    const questions = await askGemini(prompt, fallback);
-    return questions.map((q, i) => ({
-      id: 'q' + (i + 1),
-      num: i + 1,
-      category,
-      title: q.title,
-      framework: q.framework,
-      reference: q.reference,
-      knowledge: q.knowledge
-    }));
+  function saveWeeklyContent(key, val, weekNum) {
+    if (!state.reflections) state.reflections = {};
+    state.reflections[key] = val;
+    lsave('state', state);
+    
+    clearTimeout(syncTimeout);
+    syncTimeout = setTimeout(() => { syncWeeklyToFeishu(weekNum); }, 1500);
   }
 
+  // ── 生成：面试题 ────────────────────────────────────────────────
+  const Q_CATEGORIES = ['AI技术实操及AI知识面', '项目/产品经验类', '产品核心方法论', '行业/业务/趋势认知类'];
+  let usedTitles = lload('usedTitles', []);
   let todayQuestions = lload('questions_' + todayStr, null);
+
   async function getTodayQuestions() {
     if (todayQuestions) return todayQuestions;
-    try {
-      const qs = await generateQuestionsWithGemini();
-      todayQuestions = qs; lsave('questions_' + todayStr, qs);
-      qs.forEach(q => { if (!usedTitles.includes(q.title)) usedTitles.push(q.title); });
-      lsave('usedTitles', usedTitles);
-      return qs;
-    } catch(e) { return []; }
-  }
+    const start = new Date('2026-03-10');
+    const dayIndex = Math.floor((new Date(todayStr) - start) / 86400000);
+    const category = Q_CATEGORIES[Math.floor(dayIndex / 8) % Q_CATEGORIES.length];
+    const usedStr = usedTitles.length > 0 ? `\n已出题（不要重复）：\n${usedTitles.slice(-30).join('\n')}` : '';
 
-  let state = lload('state', { done: {}, reflections: {}, exercises: {}, weekly: {} });
-  let dayDone = lload('dayDone', []);
-  let token = null;
-  let syncTimeout = null;
-  let todayRecordId = lload('recordId_' + todayStr, null);
-
-  function setSyncStatus(status, msg) {
-    const el = document.getElementById('syncStatus');
-    if (!el) return;
-    const colors = { syncing: '#d4a843', ok: '#3a7d44', err: '#c84b2f', offline: '#8a7d6e' };
-    el.style.color = colors[status] || '#8a7d6e';
-    el.textContent = msg;
-  }
-
-  // ── 通过专属 Worker 请求飞书 ─────────────────────────────────────
-  async function getToken() {
-    if (token) return token;
-    try {
-      // 请求我们自己的 Worker 接口，不再需要传 app_secret
-      const res = await fetch(API_BASE + '/feishu/auth/v3/tenant_access_token/internal', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ app_id: FEISHU.appId }) 
-      });
-      const data = await res.json();
-      if (data.tenant_access_token) {
-        token = data.tenant_access_token;
-        setTimeout(() => { token = null; }, 110 * 60 * 1000);
-        return token;
-      } else {
-        alert('获取Token失败(可能凭证填错)：\n' + JSON.stringify(data));
-      }
-    } catch(e) { alert('请求飞书网络异常：\n' + e.message); }
-    return null;
-  }
-
-  async function feishuAPI(method, path, body) {
-    const tk = await getToken();
-    if (!tk) throw new Error('no token');
-    const opts = {
-      method,
-      headers: { 'Authorization': 'Bearer ' + tk, 'Content-Type': 'application/json' }
-    };
-    if (body) opts.body = JSON.stringify(body);
-    // 将原本直连飞书的请求转发到我们的 Worker
-    const res = await fetch(API_BASE + '/feishu' + path, opts);
-    return res.json();
-  }
-
-  // ── 终极修复：带有三重降级保障的记录查询 ───────────────────────
-  async function fetchTodayRecord() {
-    try {
-      const path = `/bitable/v1/apps/${FEISHU.baseId}/tables/${FEISHU.tableId}/records`;
-      const dateTs = new Date(todayStr + 'T00:00:00+08:00').getTime();
-      const [y, m, d] = todayStr.split('-');
-      
-      // 方案 A：使用飞书标准的 DATE() 函数查询
-      const f1 = `CurrentValue.[日期]=DATE(${parseInt(y)},${parseInt(m)},${parseInt(d)})`;
-      let data = await feishuAPI('GET', path + `?filter=${encodeURIComponent(f1)}`);
-      
-      // 方案 B：如果字段其实是数字，公式报错，则降级为时间戳精确匹配
-      if (data.code && data.code !== 0) {
-        const f2 = `CurrentValue.[日期]=${dateTs}`;
-        data = await feishuAPI('GET', path + `?filter=${encodeURIComponent(f2)}`);
-      }
-      
-      // 方案 C：如果飞书还是拦截，终极降级：直接拉取最近100条记录，用前端强行寻找
-      if (data.code && data.code !== 0) {
-        data = await feishuAPI('GET', path + `?page_size=100`);
-      }
-
-      if (data.data && data.data.items) {
-        // 前端二次校验，确保万无一失
-        const rec = data.data.items.find(item => item.fields['日期'] === dateTs);
-        if (rec) {
-          todayRecordId = rec.record_id;
-          return rec.fields;
-        }
-      }
-    } catch(e) { console.error('fetchTodayRecord 异常', e); }
-    return null;
-  }
-
-  // ── 面经表的同步也应用同样的机制 ─────────────────────────────────
-  async function syncInterviewAnswer(qid) {
-    if (!todayQuestions) return;
-    const q = todayQuestions.find(x => x.id === qid);
-    if (!q) return;
-    const myAnswer = state.reflections[qid] || '';
-    const dateTs = new Date(todayStr + 'T00:00:00+08:00').getTime();
-    const fields = {
-      '日期': dateTs, '题目编号': q.num, '题目类别': q.category, '题目内容': q.title,
-      '答题思路': q.framework, '参考答案': q.reference, '知识点': q.knowledge,
-    };
-    if (myAnswer) fields['我的答案'] = myAnswer;
-
-    const basePath = `/bitable/v1/apps/${FEISHU.baseId}/tables/${FEISHU.interviewTableId}/records`;
-    try {
-      if (!interviewRecordIds[qid]) {
-        try {
-          const [y, m, d] = todayStr.split('-');
-          // A
-          const f1 = `AND(CurrentValue.[日期]=DATE(${parseInt(y)},${parseInt(m)},${parseInt(d)}),CurrentValue.[题目编号]=${q.num})`;
-          let data = await feishuAPI('GET', `${basePath}?filter=${encodeURIComponent(f1)}`);
-          // B
-          if (data.code && data.code !== 0) {
-            const f2 = `AND(CurrentValue.[日期]=${dateTs},CurrentValue.[题目编号]=${q.num})`;
-            data = await feishuAPI('GET', `${basePath}?filter=${encodeURIComponent(f2)}`);
-          }
-          // C
-          if (data.code && data.code !== 0) {
-            data = await feishuAPI('GET', `${basePath}?page_size=100`);
-          }
-
-          if (data.data && data.data.items) {
-            const rec = data.data.items.find(item => item.fields['日期'] === dateTs && item.fields['题目编号'] === q.num);
-            if (rec) {
-              interviewRecordIds[qid] = rec.record_id;
-              lsave('interviewRecordIds_' + todayStr, interviewRecordIds);
-            }
-          }
-        } catch(e) {}
-      }
-
-      // 写入或更新逻辑保持不变
-      if (interviewRecordIds[qid]) {
-        const res = await feishuAPI('PUT', `${basePath}/${interviewRecordIds[qid]}`, { fields });
-        if (res.code === 1254043 || res.code === 1254040) {
-          interviewRecordIds[qid] = null;
-          const r2 = await feishuAPI('POST', basePath, { fields });
-          if (r2.data && r2.data.record) {
-            interviewRecordIds[qid] = r2.data.record.record_id; lsave('interviewRecordIds_' + todayStr, interviewRecordIds);
-          }
-        }
-      } else {
-        const res = await feishuAPI('POST', basePath, { fields });
-        if (res.data && res.data.record) {
-          interviewRecordIds[qid] = res.data.record.record_id; lsave('interviewRecordIds_' + todayStr, interviewRecordIds);
-        }
-      }
-    } catch(e) {}
-  }
-
-  const ARTICLE_LINKS = {
-    day1: 'https://simonwillison.net/2025/Dec/31/the-year-in-llms/',
-    day2: 'https://www.notion.com/releases/2025-09-18',
-    day3: ''
-  };
-
-  function buildFields() {
-    const doneTasks = Object.keys(state.done).filter(k => state.done[k]);
-    const links = doneTasks.filter(id => ARTICLE_LINKS[id]).map(id => ARTICLE_LINKS[id]).join('\n');
-    const reflectionText = ['day1','day2','day3']
-      .filter(id => state.reflections[id])
-      .map(id => `[${id}] ${state.reflections[id]}`)
-      .join('\n\n');
-    const dateTs = new Date(todayStr + 'T00:00:00+08:00').getTime();
-    const fields = {
-      '日期': dateTs,
-      '任务ID': doneTasks.join(',') || '未打卡',
-      '是否完成': doneTasks.length > 0,
-    };
-    if (reflectionText) fields['思考内容'] = reflectionText;
-    if (links) fields['文章链接'] = links;
-    return fields;
-  }
-
-  let interviewRecordIds = lload('interviewRecordIds_' + todayStr, {});
-
-  function scheduleSync(interviewQid) {
-    setSyncStatus('syncing', '同步中...');
-    clearTimeout(syncTimeout);
-    syncTimeout = setTimeout(() => {
-      syncToFeishu();
-      if (interviewQid) syncInterviewAnswer(interviewQid);
-    }, 1500);
-  }
-
-  async function syncToFeishu() {
-    if (typeof checkGlobalAuth === 'function' && !checkGlobalAuth()) {
-      lsave('state', state); lsave('dayDone', dayDone);
-      setSyncStatus('offline', '未登录，数据暂存本地'); return;
-    }
+    const prompt = `资深AI产品经理面试官，为候选人(转型AI PM,金融背景)出2道题。类别：${category} ${usedStr}\n请按JSON返回：\n[{"title": "...", "framework": "...", "reference": "...", "knowledge": "..."}]`;
+    const fallback = [{ title: '谈谈对Agent的理解？', framework: '① 定义 ② 案例', reference: '具备自主规划能力的LLM应用', knowledge: 'Agent' }];
     
     try {
-      const fields = buildFields();
-      const basePath = `/bitable/v1/apps/${FEISHU.baseId}/tables/${FEISHU.tableId}/records`;
-      let res;
-
-      if (!todayRecordId) { await fetchTodayRecord(); }
-
-      if (todayRecordId) {
-        res = await feishuAPI('PUT', `${basePath}/${todayRecordId}`, { fields });
-        if (res && (res.code === 1254043 || res.code === 1254040)) {
-          todayRecordId = null; lsave('recordId_' + todayStr, null);
-          res = await feishuAPI('POST', basePath, { fields });
-          if (res.data && res.data.record) {
-            todayRecordId = res.data.record.record_id; lsave('recordId_' + todayStr, todayRecordId);
-          }
-        }
-      } else {
-        res = await feishuAPI('POST', basePath, { fields });
-        if (res.data && res.data.record) {
-          todayRecordId = res.data.record.record_id; lsave('recordId_' + todayStr, todayRecordId);
-        }
-      }
-      
-      if (res && res.code !== undefined && res.code !== 0) {
-        setSyncStatus('err', `同步失败 code:${res.code}`);
-      } else {
-        setSyncStatus('ok', '已同步 ✓');
-      }
-    } catch(e) {
-      setSyncStatus('err', '同步失败，已本地保存');
-    }
-  }
-
-  async function loadFromFeishu() {
-    if (!isAuthorized) return;
-    try {
-      const fields = await fetchTodayRecord();
-      if (fields) {
-        lsave('recordId_' + todayStr, todayRecordId);
-        if (fields['任务ID'] && fields['任务ID'] !== '-') {
-          fields['任务ID'].split(',').forEach(id => { if (id) state.done[id.trim()] = true; });
-        }
-        if (fields['思考内容'] && fields['思考内容'] !== '-') {
-          const parts = fields['思考内容'].split('\n\n');
-          parts.forEach(p => {
-            const m = p.match(/^\[(\w+)\]\s*([\s\S]+)/);
-            if (m) state.reflections[m[1]] = m[2].trim();
-          });
-        }
-        lsave('state', state);
-        setSyncStatus('ok', '云端数据已加载 ✓');
-      } else {
-        setSyncStatus('ok', '今日无记录，开始打卡吧');
-      }
-      renderState();
-    } catch(e) {}
-  }
-
-  function renderState() {
-    ['day1','day2','day3'].forEach(id => {
-      const statusEl = document.getElementById('status-' + id);
-      const btn = document.getElementById('btn-' + id);
-      if (!statusEl || !btn) return;
-      if (state.done[id]) {
-        statusEl.textContent = '已完成 ✓';
-        statusEl.className = 'day-status done';
-        btn.classList.add('checked');
-        btn.textContent = '撤销完成';
-        btn.onclick = () => cancelDone(id);
-      } else {
-        btn.onclick = () => markDone(id);
-      }
-      if (state.reflections[id]) {
-        const el = document.getElementById('reflect-' + id);
-        if (el) el.value = state.reflections[id];
-      }
-    });
-    [1,2,3,4].forEach(n => {
-      const btn = document.getElementById('weekly-btn-' + n);
-      if (btn && state.weekly && state.weekly[n]) {
-        btn.classList.add('done');
-        btn.textContent = '已完成 ✓';
-      }
-    });
-    updateProgress();
-    renderStreak();
-  }
-
-  function renderStreak() {
-    const streakRow = document.getElementById('streakRow');
-    streakRow.innerHTML = '';
-    for (let i = 20; i >= 0; i--) {
-      const d = new Date(now); d.setDate(d.getDate() - i);
-      const ds = (new Date(d.getTime() - offset)).toISOString().slice(0, 10);
-      const dot = document.createElement('div');
-      dot.className = 'streak-dot' + (ds === todayStr ? ' today' : '') + (dayDone.includes(ds) ? ' done' : '');
-      dot.textContent = d.getDate();
-      streakRow.appendChild(dot);
-    }
-  }
-
-  function switchTab(name) {
-    document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
-    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
-    document.getElementById('tab-' + name).classList.add('active');
-    event.target.classList.add('active');
-  }
-
-  function toggleCard(id) {
-    document.getElementById('body-' + id).classList.toggle('open');
-  }
-
-  function markDone(id) {
-    state.done[id] = true;
-    document.getElementById('status-' + id).textContent = '已完成 ✓';
-    document.getElementById('status-' + id).className = 'day-status done';
-    const btn = document.getElementById('btn-' + id);
-    btn.classList.add('checked');
-    btn.textContent = '撤销完成';
-    btn.onclick = () => cancelDone(id);
-    updateProgress();
-    if (state.done['day1'] && state.done['day2'] && state.done['day3']) {
-      if (!dayDone.includes(todayStr)) { dayDone.push(todayStr); }
-    }
-    scheduleSync();
-  }
-
-  function cancelDone(id) {
-    state.done[id] = false;
-    document.getElementById('status-' + id).textContent = '待完成';
-    document.getElementById('status-' + id).className = 'day-status pending';
-    const btn = document.getElementById('btn-' + id);
-    btn.classList.remove('checked');
-    btn.textContent = '标记完成 ✓';
-    btn.onclick = () => markDone(id);
-    const idx = dayDone.indexOf(todayStr);
-    if (idx > -1) dayDone.splice(idx, 1);
-    updateProgress();
-    renderStreak();
-    scheduleSync();
-  }
-
-  function saveReflect(id, val) {
-    state.reflections[id] = val;
-    scheduleSync();
-  }
-
-  function updateProgress() {
-    const learnDone = ['day1','day2','day3'].filter(d => state.done[d]).length;
-    const interviewDone = state.done['interview'] ? 1 : 0;
-    const total = 4;
-    const done = learnDone + interviewDone;
-    document.getElementById('mainProgress').style.width = (done / total * 100) + '%';
-    document.getElementById('progressText').textContent = done + ' / ' + total + ' 完成';
+      const questions = await askGemini(prompt, fallback);
+      todayQuestions = questions.map((q, i) => ({ id: 'q'+(i+1), num: i+1, category, ...q }));
+      lsave('questions_' + todayStr, todayQuestions);
+      todayQuestions.forEach(q => { if (!usedTitles.includes(q.title)) usedTitles.push(q.title); });
+      lsave('usedTitles', usedTitles);
+      return todayQuestions;
+    } catch(e) { return fallback; }
   }
 
   async function renderInterview() {
@@ -1341,34 +963,19 @@ ${usedStr}
     container.innerHTML = qs.map((q, i) => `
       <div class="day-card" style="margin-bottom:24px;">
         <div class="day-header" onclick="this.nextElementSibling.classList.toggle('open')">
-          <div class="day-label">
-            <span class="day-num" style="color:#9b59b6;background:rgba(155,89,182,0.08);">题目 ${String(i+1).padStart(2,'0')}</span>
-            <span class="day-title" style="font-size:14px;">${q.title}</span>
-          </div>
+          <div class="day-label"><span class="day-num" style="color:#9b59b6;background:rgba(155,89,182,0.08);">题目 ${String(i+1).padStart(2,'0')}</span><span class="day-title" style="font-size:14px;">${q.title}</span></div>
           <span style="font-family:'Space Mono',monospace;font-size:9px;color:#9b59b6;letter-spacing:1px;">${q.category}</span>
         </div>
         <div class="day-body ${i===0?'open':''}">
-          <div class="keypoints">
-            <div class="keypoints-title">📌 答题框架</div>
-            ${q.framework.split('\n').map(f => `<div class="keypoint"><div class="keypoint-dot" style="background:#9b59b6;"></div><div class="keypoint-text">${f.replace(/^[①②③④]/,'').trim()}</div></div>`).join('')}
-          </div>
-
+          <div class="keypoints"><div class="keypoints-title">📌 答题框架</div>${q.framework.split('\n').map(f => `<div class="keypoint"><div class="keypoint-dot" style="background:#9b59b6;"></div><div class="keypoint-text">${f.replace(/^[①②③④]/,'').trim()}</div></div>`).join('')}</div>
           <div class="reflection-block" style="background:rgba(155,89,182,0.03);border-color:rgba(155,89,182,0.2);">
             <div class="reflection-label" style="color:#9b59b6;">✍️ 我的答案</div>
             <textarea class="reflection-input" id="reflect-${q.id}" placeholder="先写出来，不求完美，3-5分钟..." oninput="saveInterviewAnswer('${q.id}', this.value)" style="min-height:120px;">${state.reflections[q.id]||''}</textarea>
           </div>
-
           <details style="margin-top:16px;">
             <summary style="font-family:'Space Mono',monospace;font-size:11px;color:#9b59b6;cursor:pointer;letter-spacing:1px;">📖 查看参考答案</summary>
-            <div style="margin-top:12px;padding:16px;background:rgba(155,89,182,0.04);border-radius:2px;font-size:13px;line-height:1.9;color:#3a3028;">
-              ${q.reference.split('\n').map(l => `<p>${l}</p>`).join('')}
-            </div>
+            <div style="margin-top:12px;padding:16px;background:rgba(155,89,182,0.04);border-radius:2px;font-size:13px;line-height:1.9;color:#3a3028;">${q.reference.split('\n').map(l => `<p>${l}</p>`).join('')}</div>
           </details>
-
-          <div style="margin-top:14px;padding:12px 16px;background:rgba(212,168,67,0.06);border:1px solid rgba(212,168,67,0.2);border-radius:2px;">
-            <div style="font-family:'Space Mono',monospace;font-size:10px;color:var(--gold);letter-spacing:1px;margin-bottom:6px;">🔑 知识点</div>
-            <div style="font-size:12px;color:#3a3028;line-height:1.8;">${q.knowledge}</div>
-          </div>
         </div>
       </div>
     `).join('') + `
@@ -1388,48 +995,269 @@ ${usedStr}
     scheduleSync(qid);
   }
 
-  async function deleteInterviewRecord(qid) {
-    const recordId = interviewRecordIds[qid];
-    if (!recordId) return;
+  // ── 数据持久化操作：飞书同步 (Triple Fallback 防分身法) ─────────
+  async function fetchTodayRecord() {
     try {
-      const basePath = `/bitable/v1/apps/${FEISHU.baseId}/tables/${FEISHU.interviewTableId}/records`;
-      await feishuAPI('DELETE', `${basePath}/${recordId}`);
-      interviewRecordIds[qid] = null; lsave('interviewRecordIds_' + todayStr, interviewRecordIds);
+      const path = `/bitable/v1/apps/${FEISHU.baseId}/tables/${FEISHU.tableId}/records`;
+      const dateTs = new Date(todayStr + 'T00:00:00+08:00').getTime();
+      const [y, m, d] = todayStr.split('-');
+      
+      let data = await feishuAPI('GET', path + `?filter=${encodeURIComponent(`CurrentValue.[日期]=DATE(${parseInt(y)},${parseInt(m)},${parseInt(d)})`)}`);
+      if (data.code && data.code !== 0) data = await feishuAPI('GET', path + `?filter=${encodeURIComponent(`CurrentValue.[日期]=${dateTs}`)}`);
+      if (data.code && data.code !== 0) data = await feishuAPI('GET', path + `?page_size=100`);
+
+      if (data.data && data.data.items) {
+        const rec = data.data.items.find(item => item.fields['日期'] === dateTs);
+        if (rec) { todayRecordId = rec.record_id; return rec.fields; }
+      }
     } catch(e) {}
+    return null;
+  }
+
+  async function syncInterviewAnswer(qid) {
+    if (!todayQuestions) return;
+    const q = todayQuestions.find(x => x.id === qid);
+    if (!q) return;
+    const dateTs = new Date(todayStr + 'T00:00:00+08:00').getTime();
+    const fields = {
+      '日期': dateTs, '题目编号': q.num, '题目类别': q.category, '题目内容': q.title,
+      '答题思路': q.framework, '参考答案': q.reference, '知识点': q.knowledge,
+    };
+    if (state.reflections[qid]) fields['我的答案'] = state.reflections[qid];
+
+    const basePath = `/bitable/v1/apps/${FEISHU.baseId}/tables/${FEISHU.interviewTableId}/records`;
+    try {
+      if (!interviewRecordIds[qid]) {
+        try {
+          const [y, m, d] = todayStr.split('-');
+          let data = await feishuAPI('GET', `${basePath}?filter=${encodeURIComponent(`AND(CurrentValue.[日期]=DATE(${parseInt(y)},${parseInt(m)},${parseInt(d)}),CurrentValue.[题目编号]=${q.num})`)}`);
+          if (data.code && data.code !== 0) data = await feishuAPI('GET', `${basePath}?filter=${encodeURIComponent(`AND(CurrentValue.[日期]=${dateTs},CurrentValue.[题目编号]=${q.num})`)}`);
+          if (data.code && data.code !== 0) data = await feishuAPI('GET', `${basePath}?page_size=100`);
+
+          if (data.data && data.data.items) {
+            const rec = data.data.items.find(item => item.fields['日期'] === dateTs && item.fields['题目编号'] === q.num);
+            if (rec) { interviewRecordIds[qid] = rec.record_id; lsave('interviewRecordIds_' + todayStr, interviewRecordIds); }
+          }
+        } catch(e) {}
+      }
+
+      if (interviewRecordIds[qid]) {
+        const res = await feishuAPI('PUT', `${basePath}/${interviewRecordIds[qid]}`, { fields });
+        if (res.code === 1254043 || res.code === 1254040) {
+          interviewRecordIds[qid] = null;
+          const r2 = await feishuAPI('POST', basePath, { fields });
+          if (r2.data && r2.data.record) { interviewRecordIds[qid] = r2.data.record.record_id; lsave('interviewRecordIds_' + todayStr, interviewRecordIds); }
+        }
+      } else {
+        const res = await feishuAPI('POST', basePath, { fields });
+        if (res.data && res.data.record) { interviewRecordIds[qid] = res.data.record.record_id; lsave('interviewRecordIds_' + todayStr, interviewRecordIds); }
+      }
+    } catch(e) {}
+  }
+
+  // ── 周目标数据持久化 (新增) ─────────────────────────────────
+  async function syncWeeklyToFeishu(weekNum) {
+    setSyncStatus('syncing', '同步周目标详情...');
+    const keyPrefix = `w${weekNum}_`;
+    const doneIndexes = [1, 2, 3, 4].filter(n => state.weekly[keyPrefix + n]);
+    
+    // 汇总提交详情
+    const details = [1, 2, 3, 4]
+      .filter(n => state.reflections[keyPrefix + n])
+      .map(n => `【目标${n}】\n${state.reflections[keyPrefix + n]}`)
+      .join('\n\n');
+
+    const fields = {
+      '周序号': 'w' + weekNum,
+      '已完成项': doneIndexes.join(',') || '无',
+      '提交详情': details || '暂无内容'
+    };
+    const basePath = `/bitable/v1/apps/${FEISHU.baseId}/tables/${FEISHU.weeklyTableId}/records`;
+
+    try {
+      if (!weeklyRecordIds['w'+weekNum]) {
+        const data = await feishuAPI('GET', `${basePath}?filter=${encodeURIComponent(`CurrentValue.[周序号]="w${weekNum}"`)}`);
+        if (data.data && data.data.items && data.data.items.length > 0) {
+          weeklyRecordIds['w'+weekNum] = data.data.items[0].record_id; lsave('weeklyRecordIds', weeklyRecordIds);
+        }
+      }
+
+      if (weeklyRecordIds['w'+weekNum]) {
+        await feishuAPI('PUT', `${basePath}/${weeklyRecordIds['w'+weekNum]}`, { fields });
+      } else {
+        const res = await feishuAPI('POST', basePath, { fields });
+        if (res.data && res.data.record) { weeklyRecordIds['w'+weekNum] = res.data.record.record_id; lsave('weeklyRecordIds', weeklyRecordIds); }
+      }
+      setSyncStatus('ok', '周目标已更新 ✓');
+    } catch(e) { setSyncStatus('err', '周目标同步失败'); }
+  }
+
+  async function loadWeeklyFromFeishu(weekNum) {
+    const basePath = `/bitable/v1/apps/${FEISHU.baseId}/tables/${FEISHU.weeklyTableId}/records`;
+    try {
+      const data = await feishuAPI('GET', `${basePath}?filter=${encodeURIComponent(`CurrentValue.[周序号]="w${weekNum}"`)}`);
+      if (data.data && data.data.items && data.data.items.length > 0) {
+        const rec = data.data.items[0];
+        weeklyRecordIds['w'+weekNum] = rec.record_id; lsave('weeklyRecordIds', weeklyRecordIds);
+        
+        const doneStr = rec.fields['已完成项'] || '';
+        [1, 2, 3, 4].forEach(n => { state.weekly[`w${weekNum}_${n}`] = doneStr.includes(String(n)); });
+        lsave('state', state);
+        renderState();
+      }
+    } catch(e) {}
+  }
+
+  // ── 基础任务触发同步 ──────────────────────────────────
+  function scheduleSync(interviewQid) {
+    setSyncStatus('syncing', '同步中...');
+    clearTimeout(syncTimeout);
+    syncTimeout = setTimeout(() => {
+      syncToFeishu();
+      if (interviewQid) syncInterviewAnswer(interviewQid);
+    }, 1500);
+  }
+
+  async function syncToFeishu() {
+    try {
+      const doneTasks = Object.keys(state.done).filter(k => state.done[k]);
+      const reflectionText = ['day1','day2','day3'].filter(id => state.reflections[id]).map(id => `[${id}] ${state.reflections[id]}`).join('\n\n');
+      const dateTs = new Date(todayStr + 'T00:00:00+08:00').getTime();
+      const fields = { '日期': dateTs, '任务ID': doneTasks.join(',') || '未打卡', '是否完成': doneTasks.length > 0 };
+      if (reflectionText) fields['思考内容'] = reflectionText;
+
+      const basePath = `/bitable/v1/apps/${FEISHU.baseId}/tables/${FEISHU.tableId}/records`;
+      if (!todayRecordId) await fetchTodayRecord();
+
+      if (todayRecordId) {
+        const res = await feishuAPI('PUT', `${basePath}/${todayRecordId}`, { fields });
+        if (res && (res.code === 1254043 || res.code === 1254040)) {
+          todayRecordId = null; lsave('recordId_' + todayStr, null);
+          const r2 = await feishuAPI('POST', basePath, { fields });
+          if (r2.data && r2.data.record) { todayRecordId = r2.data.record.record_id; lsave('recordId_' + todayStr, todayRecordId); }
+        }
+      } else {
+        const res = await feishuAPI('POST', basePath, { fields });
+        if (res.data && res.data.record) { todayRecordId = res.data.record.record_id; lsave('recordId_' + todayStr, todayRecordId); }
+      }
+      setSyncStatus('ok', '已同步 ✓');
+    } catch(e) { setSyncStatus('err', '同步失败，已本地保存'); }
+  }
+
+  // ── 初始化与渲染 UI ───────────────────────────────────
+  function renderState() {
+    ['day1','day2','day3'].forEach(id => {
+      const statusEl = document.getElementById('status-' + id);
+      const btn = document.getElementById('btn-' + id);
+      if (!statusEl || !btn) return;
+      if (state.done[id]) {
+        statusEl.textContent = '已完成 ✓'; statusEl.className = 'day-status done';
+        btn.classList.add('checked'); btn.textContent = '撤销完成'; btn.onclick = () => cancelDone(id);
+      } else {
+        btn.onclick = () => markDone(id);
+      }
+      if (state.reflections[id]) { const el = document.getElementById('reflect-' + id); if (el) el.value = state.reflections[id]; }
+    });
+
+    // 修复 Bug 后的周目标状态渲染
+    const startDt = new Date('2026-03-10');
+    const dayIdx = Math.floor((new Date(todayStr) - startDt) / 86400000);
+    const currentWeek = Math.floor(dayIdx / 7) + 1;
+
+    [1,2,3,4].forEach(n => {
+      const btn = document.getElementById('weekly-btn-' + n);
+      const key = `w${currentWeek}_${n}`;
+      if (btn && state.weekly && state.weekly[key]) {
+        btn.classList.add('done'); btn.textContent = '已完成 ✓';
+        btn.style.borderColor = ''; btn.style.color = '';
+      }
+    });
+    updateProgress();
+    renderStreak();
+  }
+
+  async function loadFromFeishu() {
+    try {
+      const fields = await fetchTodayRecord();
+      if (fields) {
+        lsave('recordId_' + todayStr, todayRecordId);
+        if (fields['任务ID'] && fields['任务ID'] !== '-') { fields['任务ID'].split(',').forEach(id => { if (id) state.done[id.trim()] = true; }); }
+        if (fields['思考内容'] && fields['思考内容'] !== '-') {
+          fields['思考内容'].split('\n\n').forEach(p => { const m = p.match(/^\[(\w+)\]\s*([\s\S]+)/); if (m) state.reflections[m[1]] = m[2].trim(); });
+        }
+        lsave('state', state);
+        setSyncStatus('ok', '云端数据已加载 ✓');
+      } else { setSyncStatus('ok', '今日无记录，开始打卡吧'); }
+      renderState();
+    } catch(e) {}
+  }
+
+  // ── 通用交互逻辑 ──────────────────────────────────────
+  function switchTab(name) {
+    document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+    document.getElementById('tab-' + name).classList.add('active');
+    event.target.classList.add('active');
+  }
+
+  function toggleCard(id) { document.getElementById('body-' + id).classList.toggle('open'); }
+  function saveReflect(id, val) { state.reflections[id] = val; scheduleSync(); }
+
+  function markDone(id) {
+    state.done[id] = true;
+    document.getElementById('status-' + id).textContent = '已完成 ✓'; document.getElementById('status-' + id).className = 'day-status done';
+    const btn = document.getElementById('btn-' + id); btn.classList.add('checked'); btn.textContent = '撤销完成'; btn.onclick = () => cancelDone(id);
+    updateProgress();
+    if (state.done['day1'] && state.done['day2'] && state.done['day3']) { if (!dayDone.includes(todayStr)) { dayDone.push(todayStr); } }
+    scheduleSync();
+  }
+
+  function cancelDone(id) {
+    state.done[id] = false;
+    document.getElementById('status-' + id).textContent = '待完成'; document.getElementById('status-' + id).className = 'day-status pending';
+    const btn = document.getElementById('btn-' + id); btn.classList.remove('checked'); btn.textContent = '标记完成 ✓'; btn.onclick = () => markDone(id);
+    const idx = dayDone.indexOf(todayStr); if (idx > -1) dayDone.splice(idx, 1);
+    updateProgress(); renderStreak(); scheduleSync();
+  }
+
+  function updateProgress() {
+    const learnDone = ['day1','day2','day3'].filter(d => state.done[d]).length;
+    const interviewDone = state.done['interview'] ? 1 : 0;
+    const total = 4;
+    document.getElementById('mainProgress').style.width = ((learnDone + interviewDone) / total * 100) + '%';
+    document.getElementById('progressText').textContent = (learnDone + interviewDone) + ' / ' + total + ' 完成';
+  }
+
+  function renderStreak() {
+    const streakRow = document.getElementById('streakRow'); streakRow.innerHTML = '';
+    for (let i = 20; i >= 0; i--) {
+      const d = new Date(now); d.setDate(d.getDate() - i);
+      const ds = (new Date(d.getTime() - offset)).toISOString().slice(0, 10);
+      const dot = document.createElement('div');
+      dot.className = 'streak-dot' + (ds === todayStr ? ' today' : '') + (dayDone.includes(ds) ? ' done' : '');
+      dot.textContent = d.getDate(); streakRow.appendChild(dot);
+    }
   }
 
   async function markInterviewDone() {
     state.done['interview'] = true;
-    const btn = document.getElementById('btn-interview');
-    if (btn) { btn.classList.add('checked'); btn.textContent = '撤销完成'; btn.onclick = cancelInterviewDone; }
-    const qs = await getTodayQuestions();
-    qs.forEach(q => syncInterviewAnswer(q.id));
-    scheduleSync();
-    updateProgress();
+    const btn = document.getElementById('btn-interview'); if (btn) { btn.classList.add('checked'); btn.textContent = '撤销完成'; btn.onclick = cancelInterviewDone; }
+    const qs = await getTodayQuestions(); qs.forEach(q => syncInterviewAnswer(q.id));
+    scheduleSync(); updateProgress();
   }
 
   async function cancelInterviewDone() {
     state.done['interview'] = false;
-    const btn = document.getElementById('btn-interview');
-    if (btn) { btn.classList.remove('checked'); btn.textContent = '标记完成 ✓'; btn.onclick = markInterviewDone; }
-    setSyncStatus('syncing', '同步中...');
-    const qs = await getTodayQuestions();
-    Promise.all(qs.map(q => deleteInterviewRecord(q.id)))
-      .then(() => setSyncStatus('ok', '已同步 ✓'))
-      .catch(() => setSyncStatus('err', '删除失败'));
-    scheduleSync();
-    updateProgress();
+    const btn = document.getElementById('btn-interview'); if (btn) { btn.classList.remove('checked'); btn.textContent = '标记完成 ✓'; btn.onclick = markInterviewDone; }
+    scheduleSync(); updateProgress();
   }
 
   function adjustLayout() {
-    const header = document.querySelector('.header');
-    const tabNav = document.querySelector('.tab-nav');
+    const header = document.querySelector('.header'); const tabNav = document.querySelector('.tab-nav');
     if (!header || !tabNav) return;
-    const headerH = header.offsetHeight;
-    const tabH = tabNav.offsetHeight;
-    document.documentElement.style.setProperty('--header-h', headerH + 'px');
-    tabNav.style.top = headerH + 'px';
-    document.body.style.paddingTop = (headerH + tabH) + 'px';
+    document.documentElement.style.setProperty('--header-h', header.offsetHeight + 'px');
+    tabNav.style.top = header.offsetHeight + 'px';
+    document.body.style.paddingTop = (header.offsetHeight + tabNav.offsetHeight) + 'px';
   }
   window.addEventListener('resize', adjustLayout);
 
