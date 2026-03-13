@@ -1055,7 +1055,10 @@
       lsave('state', state);
       
       // 更新 UI
-      commentText.innerHTML = aiComment.replace(/\n/g, '<br>');
+      // 🚨 修复尖括号被浏览器吞掉的 Bug：先转义，再换行
+      const safeText = aiComment.replace(/</g, '&lt;').replace(/>/g, '&gt;');
+      commentText.innerHTML = safeText.replace(/\n/g, '<br>');
+      
       btn.textContent = '重新获取点评';
       btn.disabled = false;
       
