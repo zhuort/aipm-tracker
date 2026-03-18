@@ -465,14 +465,20 @@
     const idx = parseInt(id.replace('k', ''));
     const data = getKnowledgeCache()[idx]; if (!data) return;
 
-    const fields = { '知识点名称': data.concept, '学习日期': todayTimestamp, '通俗解释': data.eli5, '产品价值': data.product_value, '面试怎么聊': data.interview_hook };
-    if (state.reflections[id]) fields['我的费曼总结'] = state.reflections[id];
-    if (state.aiComments && state.aiComments[id]) fields['导师点评'] = state.aiComments[id];
+    // 🚨 修复：加上对应的 Emoji 表情，与飞书表头一字不差
+    const fields = { 
+      '知识点名称': data.concept, 
+      '学习日期': todayTimestamp, 
+      '🤔 通俗解释': data.eli5, 
+      '💼 产品价值': data.product_value, 
+      '🎯 面试怎么聊': data.interview_hook 
+    };
+    if (state.reflections[id]) fields['✍️ 我的费曼总结'] = state.reflections[id];
+    if (state.aiComments && state.aiComments[id]) fields['🤖 导师点评'] = state.aiComments[id];
 
     const path = `/bitable/v1/apps/${FEISHU.baseId}/tables/${FEISHU.knowledgeTableId}/records`;
     try {
       if (!knowledgeRecordIds[id]) {
-        // 🚨 修复 2：去掉日期的复杂匹配，直接按名称查，防飞书查询语法崩溃，同时去掉了字符串里的引号防止注错
         const safeConcept = data.concept.replace(/"/g, ''); 
         const d = await feishuAPI('GET', `${path}?filter=${encodeURIComponent(`CurrentValue.[知识点名称]="${safeConcept}"`)}`);
         if (d.data?.items) knowledgeRecordIds[id] = d.data.items[0].record_id;
@@ -490,7 +496,7 @@
       }
     } catch(e) { console.error('【知识库同步异常】', e); }
   }
-
+  
   async function syncSingleInterview(qid) {
     const q = getInterviewCache().find(x => x.id === qid); if (!q) return;
     const fields = { '题目内容': q.title, '生成日期': todayTimestamp, '所属类别': q.category, '考察知识点': q.knowledge, '答题框架': q.framework };
