@@ -16,6 +16,488 @@
     --card-bg: #faf7f2;
     --border: #d9d0c0;
   }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { background: var(--paper); color: var(--ink); font-family: 'Noto Sans SC', sans-serif; font-weight: 300; min-height: 100vh; padding: 0 0 80px 0; }
+  
+  /* Header & Progress */
+  .header { background: var(--ink); color: var(--paper); padding: 10px 20px 0; position: fixed; top: 0; left: 0; right: 0; z-index: 100; box-shadow: 0 2px 8px rgba(0,0,0,0.15); }
+  .header-top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
+  .header-title { font-family: 'Noto Serif SC', serif; font-size: 14px; letter-spacing: 1px; }
+  .header-subtitle { font-family: 'Space Mono', monospace; font-size: 9px; color: var(--gold); letter-spacing: 2px; margin-top: 2px; text-transform: uppercase; }
+  .date-badge { font-family: 'Space Mono', monospace; font-size: 9px; color: rgba(245,240,232,0.5); text-align: right; }
+  .progress-row { display: flex; align-items: center; gap: 10px; margin-bottom: 0; padding-bottom:8px; }
+  .progress-bar-wrap { flex: 1; height: 2px; background: rgba(255,255,255,0.15); border-radius: 2px; overflow: hidden; }
+  .progress-bar-fill { height: 100%; background: var(--gold); border-radius: 2px; transition: width 0.6s ease; }
+  .progress-text { font-family: 'Space Mono', monospace; font-size: 12px; color: var(--gold); white-space: nowrap; }
+  
+  /* Tabs */
+  .tab-nav { display: flex; border-bottom: 1px solid var(--border); padding: 0 24px; background: var(--card-bg); position: sticky; z-index: 10; }
+  .tab-btn { padding: 16px 20px; font-size: 13px; font-family: 'Noto Sans SC', sans-serif; font-weight: 400; border: none; background: none; cursor: pointer; color: var(--muted); border-bottom: 2px solid transparent; margin-bottom: -1px; transition: all 0.2s; letter-spacing: 0.5px; }
+  .tab-btn.active { color: var(--accent); border-bottom-color: var(--accent); }
+  .tab-panel { display: none; }
+  .tab-panel.active { display: block; }
+  .content { max-width: 760px; margin: 0 auto; padding: 32px 24px; }
+  .section-hd { display: flex; align-items: center; gap: 12px; margin-bottom: 20px; }
+  .section-hd h2 { font-family: 'Noto Serif SC', serif; font-size: 18px; font-weight: 700; }
+  .section-hd-line { flex: 1; height: 1px; background: var(--border); }
+  
+  /* Shared Cards */
+  .day-card { background: var(--card-bg); border: 1px solid var(--border); border-radius: 2px; margin-bottom: 24px; overflow: hidden; transition: box-shadow 0.2s; }
+  .day-header { display: flex; align-items: center; justify-content: space-between; padding: 18px 24px; border-bottom: 1px solid var(--border); cursor: pointer; }
+  .day-label { display: flex; align-items: center; gap: 14px; }
+  .day-num { font-family: 'Space Mono', monospace; font-size: 11px; font-weight: 700; color: #2f64c8; letter-spacing: 2px; background: rgba(47,100,200,0.08); padding: 4px 10px; border-radius: 2px; }
+  .day-title { font-family: 'Noto Serif SC', serif; font-size: 16px; color: var(--ink); }
+  .day-body { padding: 24px; display: none; }
+  .day-body.open { display: block; animation: slideDown 0.25s ease; }
+  @keyframes slideDown { from { opacity: 0; transform: translateY(-8px); } to { opacity: 1; transform: translateY(0); } }
+
+  /* Knowledge Specific */
+  .knowledge-block { border-left: 3px solid #2f64c8; padding: 16px 20px; background: rgba(47,100,200,0.03); margin-bottom: 20px; border-radius: 0 2px 2px 0; }
+  .knowledge-label { font-family: 'Space Mono', monospace; font-size: 10px; color: #2f64c8; letter-spacing: 1px; text-transform: uppercase; margin-bottom: 8px; }
+  .knowledge-title { font-family: 'Noto Serif SC', serif; font-size: 18px; font-weight: 700; margin-bottom: 16px; color: var(--ink); }
+  .knowledge-p { font-size: 13px; line-height: 1.8; color: #3a3028; margin-bottom: 12px; }
+  .knowledge-p strong { color: #2f64c8; font-weight: 500; }
+  
+  /* Input & Buttons */
+  .reflection-block { background: rgba(26,20,16,0.03); border: 1px solid var(--border); border-radius: 2px; padding: 16px 20px; margin-top: 20px; }
+  .reflection-input { width: 100%; border: 1px solid var(--border); background: white; padding: 12px; font-family: 'Noto Sans SC', sans-serif; font-size: 13px; color: var(--ink); resize: vertical; min-height: 80px; outline: none; border-radius: 1px; transition: border-color 0.2s; margin-top: 10px; }
+  .reflection-input:focus { border-color: var(--accent); }
+  .check-row { display: flex; justify-content: flex-end; margin-top: 20px; gap: 10px; align-items: center; }
+  .check-btn { font-family: 'Space Mono', monospace; font-size: 11px; letter-spacing: 1px; text-transform: uppercase; padding: 10px 24px; border: 1.5px solid var(--ink); background: transparent; color: var(--ink); cursor: pointer; transition: all 0.15s; border-radius: 1px; }
+  .check-btn:hover:not(:disabled) { background: var(--ink); color: var(--paper); }
+  .check-btn.checked { background: var(--green); border-color: var(--green); color: white; }
+  
+  /* Keypoints for Interview */
+  .keypoints-title { font-family: 'Space Mono', monospace; font-size: 10px; letter-spacing: 2px; color: var(--muted); text-transform: uppercase; margin-bottom: 12px; }
+  .keypoint { display: flex; gap: 12px; margin-bottom: 10px; align-items: flex-start; }
+  .keypoint-dot { width: 6px; height: 6px; border-radius: 50%; margin-top: 7px; flex-shrink: 0; background: #9b59b6; }
+  .keypoint-text { font-size: 13px; line-height: 1.75; color: #3a3028; }
+
+  /* Weekly */
+  .weekly-block { background: var(--ink); color: var(--paper); padding: 24px; border-radius: 2px; margin-top: 32px; }
+  .weekly-input { width: 100%; border: 1px solid var(--border); background: rgba(255, 255, 255, 0.6); padding: 10px; font-family: 'Noto Sans SC', sans-serif; font-size: 12px; color: var(--ink); resize: vertical; min-height: 70px; outline: none; border-radius: 2px; margin-top: 10px; }
+  .weekly-check-btn { margin-top: 16px; font-family: 'Space Mono', monospace; font-size: 10px; padding: 8px 20px; border: 1px solid var(--gold); background: transparent; color: var(--gold); cursor: pointer; }
+  .weekly-check-btn.done { background: var(--gold); color: var(--ink); }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="header-top">
+    <div>
+      <div class="header-title">茹婷的 AI PM 成长计划</div>
+      <div class="header-subtitle">Bank PM → AI PM · 每日打卡</div>
+    </div>
+    <div style="display:flex;flex-direction:column;align-items:flex-end;gap:4px;">
+      <div class="date-badge" id="dateBadge"></div>
+      <span id="syncStatus" style="font-family:'Space Mono',monospace;font-size:9px;letter-spacing:1px;color:#d4a843;">连接数据中...</span>
+    </div>
+  </div>
+  <div class="progress-row">
+    <div class="progress-bar-wrap"><div class="progress-bar-fill" id="mainProgress" style="width:0%"></div></div>
+    <div class="progress-text" id="progressText">0 / 2 完成</div>
+  </div>
+</div>
+
+<div class="tab-nav" style="position:fixed;top:var(--header-h,72px);left:0;right:0;">
+  <button class="tab-btn active" onclick="switchTab('knowledge')">📚 每日知识</button>
+  <button class="tab-btn" onclick="switchTab('interview')">🎯 每日面经</button>
+  <button class="tab-btn" onclick="switchTab('weekly')">📌 周目标</button>
+</div>
+
+<div class="tab-panel active content" id="tab-knowledge">
+  <div class="section-hd">
+    <h2>每日底层知识基石</h2>
+    <div class="section-hd-line"></div>
+    <span style="font-family:'Space Mono',monospace;font-size:10px;color:var(--muted);">Feynman 学习法</span>
+  </div>
+
+  <div class="day-card">
+    <div class="day-header" onclick="document.getElementById('body-knowledge').classList.toggle('open')">
+      <div class="day-label">
+        <span class="day-num">核心概念</span>
+        <span class="day-title" id="k-title-bar">AI 生成中...</span>
+      </div>
+    </div>
+    <div class="day-body open" id="body-knowledge">
+      <div id="knowledge-container">
+        <div style="padding:24px;text-align:center;color:var(--muted);font-size:12px;">正在翻阅 AI 词典...</div>
+      </div>
+      
+      <div class="reflection-block">
+        <div style="font-family:'Space Mono',monospace;font-size:10px;color:var(--accent);letter-spacing:1px;text-transform:uppercase;">✍️ 费曼总结输出</div>
+        <div style="font-size:12px;color:var(--muted);margin-top:4px;">请用一句话，像给非技术人员解释一样，写下你对这个概念的理解（必填）：</div>
+        <textarea class="reflection-input" id="reflect-knowledge" placeholder="我的理解是..." oninput="saveReflect('knowledge', this.value)"></textarea>
+      </div>
+      
+      <div class="check-row">
+        <span style="font-size:12px;color:var(--muted);">预计耗时 15 分钟</span>
+        <button class="check-btn" id="btn-knowledge" onclick="markKnowledgeDone()">标记完成 ✓</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="tab-panel content" id="tab-interview">
+  <div class="section-hd">
+    <h2>每日面经题</h2>
+    <div class="section-hd-line"></div>
+    <span style="font-family:'Space Mono',monospace;font-size:10px;color:var(--muted);">每天2道 · 同步飞书</span>
+  </div>
+  <div id="interview-container"></div>
+</div>
+
+<div class="tab-panel content" id="tab-weekly">
+  <div class="section-hd">
+    <h2>周目标</h2>
+    <div class="section-hd-line"></div>
+  </div>
+  <div id="weekly-container"></div>
+</div>
+
+<script>
+  // ── 核心配置 ──────────────────────
+  const API_BASE = 'https://aipm-api.rutingzhuo05.workers.dev';
+  const FEISHU = {
+    appId: 'cli_a9248a4017f8dcb3',
+    baseId: 'KiBzbaG9patb0isx4oGcUbPWnOe',
+    tableId: 'tblX1j2AaKiDalFp',
+    interviewTableId: 'tblrik3BihWl2tIt',
+    weeklyTableId: 'tblYzYS7D7vEqNdf',
+  };
+
+  const now = new Date();
+  const offset = now.getTimezoneOffset() * 60000;
+  const localISOTime = (new Date(now.getTime() - offset)).toISOString().slice(0, -1);
+  const todayStr = localISOTime.slice(0, 10);
+  document.getElementById('dateBadge').textContent = now.toLocaleDateString('zh-CN', { year: 'numeric', month: 'long', day: 'numeric', weekday: 'long' });
+
+  function lsave(key, val) { try { localStorage.setItem('aipm_' + key, JSON.stringify(val)); } catch(e){} }
+  function lload(key, def) { try { const v = localStorage.getItem('aipm_' + key); return v !== null ? JSON.parse(v) : def; } catch(e){ return def; } }
+
+  // 密码验证
+  const CORRECT_PWD = 'ruting2026';
+  let isAuthorized = lload('authorized', false);
+  function checkGlobalAuth() {
+    if (isAuthorized) return true;
+    const input = prompt('🔐 茹婷的 AI PM 成长空间\n请输入专属打卡密码：');
+    if (input === CORRECT_PWD) { isAuthorized = true; lsave('authorized', true); return true; } 
+    else { document.body.innerHTML = '<h2 style="text-align:center;margin-top:20vh;color:#c84b2f;">🚧 无访问权限</h2>'; return false; }
+  }
+
+  function setSyncStatus(status, msg) {
+    const el = document.getElementById('syncStatus');
+    if (!el) return;
+    const colors = { syncing: '#d4a843', ok: '#3a7d44', err: '#c84b2f', offline: '#8a7d6e' };
+    el.style.color = colors[status] || '#8a7d6e'; el.textContent = msg;
+  }
+
+  // 状态管理
+  let state = lload('state', { done: {}, reflections: {}, weekly: {}, aiComments: {} });
+  let token = null;
+  let syncTimeout = null;
+  let todayRecordId = lload('recordId_' + todayStr, null);
+  let interviewRecordIds = lload('interviewRecordIds_' + todayStr, {});
+  let weeklyRecordIds = lload('weeklyRecordIds', {});
+  let learnedConcepts = lload('learnedConcepts', []);
+
+  // ── API 封装 (加入了极严的防幻觉控制) ───────────────────
+  async function askGemini(prompt, fallbackData) {
+    try {
+      const strictPrompt = prompt + "\n【系统强制指令】：请严格输出可被彻底解析的合法 JSON。绝对不允许在字符串值内部出现真实的换行符，如需换行必须使用 '\\n'。禁止输出 Markdown 标记。";
+      const res = await fetch(API_BASE + '/gemini', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          contents: [{ parts: [{ text: strictPrompt }] }],
+          generationConfig: { temperature: 0.7, maxOutputTokens: 4000, responseMimeType: "application/json" }
+        })
+      });
+      const data = await res.json();
+      if (!res.ok || data.error || !data.candidates) return fallbackData; 
+      const text = data.candidates[0].content.parts.map(p => p.text).join('');
+      const clean = text.replace(/```json/gi, '').replace(/```/g, '').trim();
+      return JSON.parse(clean);
+    } catch(e) { console.error('Gemini JSON 失败', e); return fallbackData; }
+  }
+
+  async function askGeminiText(prompt, fallbackText) {
+    try {
+      const res = await fetch(API_BASE + '/gemini', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          contents: [{ parts: [{ text: prompt }] }],
+          generationConfig: { temperature: 0.7 }
+        })
+      });
+      const data = await res.json();
+      if (!res.ok || data.error) return `⚠️ AI 暂时无法点评。`;
+      if (data.promptFeedback && data.promptFeedback.blockReason) return `⚠️ 抱歉，内容触发安全审查。`;
+      if (data.candidates && data.candidates[0].content) {
+        return data.candidates[0].content.parts.map(p => p.text).join('').trim();
+      }
+      return fallbackText;
+    } catch(e) { return fallbackText; }
+  }
+
+  async function feishuAPI(method, path, body) {
+    if (!token) {
+      const res = await fetch(API_BASE + '/feishu/auth/v3/tenant_access_token/internal', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ app_id: FEISHU.appId }) });
+      const data = await res.json();
+      if (data.tenant_access_token) { token = data.tenant_access_token; setTimeout(() => { token = null; }, 110*60*1000); }
+    }
+    const opts = { method, headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' } };
+    if (body) opts.body = JSON.stringify(body);
+    const res = await fetch(API_BASE + '/feishu' + path, opts);
+    return res.json();
+  }
+
+  // ── 新增：每日知识生成 ──────────────────────────────
+  async function generateKnowledge() {
+    const cached = lload('knowledge_' + todayStr, null);
+    if (cached) { renderKnowledge(cached); return; }
+    
+    const usedStr = learnedConcepts.length > 0 ? `\n避开已学过的概念：${learnedConcepts.join(',')}` : '';
+    const prompt = `你是一位AI产品总监。请从【RAG, 向量检索, Agent工作流, 意图识别(Intent), Token与上下文, LLM微调(SFT), 幻觉治理, Embedding机制】中挑1个概念培训产品经理候选人。${usedStr}
+请按JSON返回：
+{
+  "concept": "概念的中英文名称",
+  "eli5": "Explain Like I'm 5，用极其通俗的话解释，可结合银行业务打比方",
+  "product_value": "这个技术在AI产品(如客服或电商场景)中能解决什么具体问题",
+  "interview_hook": "面试中如果提到它，应该怎么结合产品思维包装最加分？"
+}`;
+    const fallback = { concept: "RAG (检索增强生成)", eli5: "就像是让大模型开卷考试。它记不住所有资料，所以你先给它一本书（知识库），它翻到对应页面再回答你。", product_value: "解决企业内部知识实时更新的问题，防止大模型胡编乱造（幻觉）。", interview_hook: "不要只说技术名词，要说你如何设计 RAG 的前置过滤和兜底话术。" };
+    
+    const data = await askGemini(prompt, fallback);
+    lsave('knowledge_' + todayStr, data);
+    if (!learnedConcepts.includes(data.concept)) { learnedConcepts.push(data.concept); lsave('learnedConcepts', learnedConcepts); }
+    renderKnowledge(data);
+  }
+
+  function renderKnowledge(data) {
+    document.getElementById('k-title-bar').textContent = data.concept;
+    document.getElementById('knowledge-container').innerHTML = `
+      <div class="knowledge-block">
+        <div class="knowledge-label">💡 概念通俗解析</div>
+        <div class="knowledge-title">${data.concept}</div>
+        <div class="knowledge-p"><strong>🤔 到底是个啥？</strong><br/>${data.eli5}</div>
+        <div class="knowledge-p"><strong>💼 核心产品价值：</strong><br/>${data.product_value}</div>
+        <div class="knowledge-p"><strong>🎯 面试怎么聊：</strong><br/>${data.interview_hook}</div>
+      </div>
+    `;
+    if (state.reflections['knowledge']) document.getElementById('reflect-knowledge').value = state.reflections['knowledge'];
+  }
+
+  function markKnowledgeDone() {
+    const val = document.getElementById('reflect-knowledge').value.trim();
+    if (val.length < 5) { alert("请至少写一句简单的费曼总结哦！"); return; }
+    state.done['knowledge'] = true;
+    const btn = document.getElementById('btn-knowledge');
+    btn.classList.add('checked'); btn.textContent = '已打卡 ✓';
+    updateProgress(); scheduleSync();
+  }
+
+  // ── 面试题模块 ────────────────────────────────────────────────
+  const Q_CATEGORIES = ['AI底层逻辑与概念', 'AI项目实战落地', '产品核心方法论', '业务结合与提效'];
+  let usedTitles = lload('usedTitles', []);
+  let todayQuestions = lload('questions_' + todayStr, null);
+
+  async function getTodayQuestions() {
+    if (todayQuestions) return todayQuestions;
+    const category = Q_CATEGORIES[Math.floor(Date.now() / 86400000) % Q_CATEGORIES.length];
+    const usedStr = usedTitles.length > 0 ? `\n已出题（不要重复）：\n${usedTitles.slice(-30).join('\n')}` : '';
+    const prompt = `资深AI产品经理面试官，为候选人(转型AI PM,熟悉客服系统)出2道题。类别：${category} ${usedStr}\n请按JSON返回：\n[{"title": "...", "framework": "...", "reference": "...", "knowledge": "..."}]`;
+    const fallback = [{ title: '谈谈对Agent的理解？', framework: '① 定义 ② 案例', reference: '具备自主规划能力的应用', knowledge: 'Agent' }];
+    
+    const qs = await askGemini(prompt, fallback);
+    todayQuestions = qs.map((q, i) => ({ id: 'q'+(i+1), num: i+1, category, ...q }));
+    lsave('questions_' + todayStr, todayQuestions);
+    return todayQuestions;
+  }
+
+  async function getAIEvaluation(qid) {
+    const userAnswer = state.reflections[qid] || '';
+    if (userAnswer.trim().length < 10) { alert('写点答案再让AI点评吧！'); return; }
+    const q = todayQuestions.find(x => x.id === qid);
+    const btn = document.getElementById('btn-ai-' + qid);
+    const commentBox = document.getElementById('ai-comment-' + qid);
+    const commentText = document.getElementById('ai-comment-text-' + qid);
+    
+    btn.textContent = '🤖 AI 思考中...'; btn.disabled = true;
+    commentBox.style.display = 'block'; commentText.innerHTML = '<span style="color:var(--muted)">正在生成专业点评...</span>';
+
+    const prompt = `你是严厉的AI PM面试官。题：${q.title}。候选人答案：${userAnswer}。请客观点评亮点与不足，给出建议。纯文本直接输出。`;
+    const aiComment = await askGeminiText(prompt, 'AI 思考开了小差，请重试');
+    
+    if (!state.aiComments) state.aiComments = {};
+    state.aiComments[qid] = aiComment; lsave('state', state);
+    
+    const safeText = aiComment.replace(/</g, '&lt;').replace(/>/g, '&gt;');
+    commentText.innerHTML = safeText.replace(/\n/g, '<br>');
+    btn.textContent = '重新获取点评'; btn.disabled = false;
+    scheduleSync(qid);
+  }
+
+  async function renderInterview() {
+    const container = document.getElementById('interview-container');
+    container.innerHTML = '<div style="padding:40px;text-align:center;font-size:12px;color:var(--muted);">正在出题...</div>';
+    const qs = await getTodayQuestions();
+    container.innerHTML = qs.map((q, i) => {
+      const aiCommentText = (state.aiComments && state.aiComments[q.id]) ? state.aiComments[q.id].replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/\n/g, '<br>') : '';
+      return `
+      <div class="day-card">
+        <div class="day-header" onclick="this.nextElementSibling.classList.toggle('open')">
+          <div class="day-label"><span class="day-num" style="background:rgba(155,89,182,0.08);color:#9b59b6;">题目 ${i+1}</span><span class="day-title">${q.title}</span></div>
+        </div>
+        <div class="day-body ${i===0?'open':''}">
+          <div class="keypoints"><div class="keypoints-title">📌 答题框架</div>${q.framework.split('\n').map(f => `<div class="keypoint"><div class="keypoint-dot"></div><div class="keypoint-text">${f.replace(/^[①②③④]/,'').trim()}</div></div>`).join('')}</div>
+          <div class="reflection-block" style="background:rgba(155,89,182,0.03);border-color:rgba(155,89,182,0.2);">
+            <div style="display:flex; justify-content:space-between; margin-bottom:10px;">
+              <span style="font-size:10px;color:#9b59b6;">✍️ 我的答案</span>
+              <button class="check-btn" style="padding:4px 12px; font-size:10px; border-color:#9b59b6; color:#9b59b6;" id="btn-ai-${q.id}" onclick="getAIEvaluation('${q.id}')">🤖 获取点评</button>
+            </div>
+            <textarea class="reflection-input" id="reflect-${q.id}" oninput="saveReflect('${q.id}', this.value)">${state.reflections[q.id]||''}</textarea>
+            <div id="ai-comment-${q.id}" style="margin-top:12px; display:${aiCommentText ? 'block' : 'none'}; background:rgba(155,89,182,0.06); border-left:3px solid #9b59b6; padding:12px;">
+              <div style="font-size:9px;color:#9b59b6;margin-bottom:6px;">AI EVALUATION</div>
+              <div id="ai-comment-text-${q.id}" style="font-size:12px;line-height:1.8;">${aiCommentText}</div>
+            </div>
+          </div>
+        </div>
+      </div>`;
+    }).join('') + `<div class="check-row"><button class="check-btn" id="btn-interview" onclick="toggleInterviewDone()">标记完成 ✓</button></div>`;
+    
+    if (state.done['interview']) document.getElementById('btn-interview').classList.add('checked');
+  }
+
+  function toggleInterviewDone() {
+    state.done['interview'] = !state.done['interview'];
+    const btn = document.getElementById('btn-interview');
+    if (state.done['interview']) btn.classList.add('checked'); else btn.classList.remove('checked');
+    updateProgress(); scheduleSync();
+    if (todayQuestions) todayQuestions.forEach(q => syncInterviewAnswer(q.id));
+  }
+
+  // ── 同步逻辑 ────────────────────────────────────────────────
+  function saveReflect(id, val) { state.reflections[id] = val; lsave('state', state); scheduleSync(); }
+
+  function scheduleSync(qid) {
+    setSyncStatus('syncing', '同步中...');
+    clearTimeout(syncTimeout);
+    syncTimeout = setTimeout(() => { syncMainToFeishu(); if (qid) syncInterviewAnswer(qid); }, 1500);
+  }
+
+  async function syncMainToFeishu() {
+    const fields = { '日期': new Date(todayStr + 'T00:00:00+08:00').getTime() };
+    const tasks = []; if (state.done['knowledge']) tasks.push('每日知识'); if (state.done['interview']) tasks.push('每日面经');
+    fields['任务ID'] = tasks.join(',') || '未打卡';
+    fields['是否完成'] = tasks.length > 0;
+    if (state.reflections['knowledge']) fields['思考内容'] = '[每日知识总结]\n' + state.reflections['knowledge'];
+
+    const path = `/bitable/v1/apps/${FEISHU.baseId}/tables/${FEISHU.tableId}/records`;
+    try {
+      if (!todayRecordId) {
+        const d = await feishuAPI('GET', `${path}?filter=${encodeURIComponent(`CurrentValue.[日期]=${fields['日期']}`)}`);
+        if (d.data?.items) todayRecordId = d.data.items[0].record_id;
+      }
+      if (todayRecordId) await feishuAPI('PUT', `${path}/${todayRecordId}`, { fields });
+      else { const r = await feishuAPI('POST', path, { fields }); if (r.data?.record) { todayRecordId = r.data.record.record_id; lsave('recordId_'+todayStr, todayRecordId); } }
+      setSyncStatus('ok', '已同步 ✓');
+    } catch(e) { setSyncStatus('err', '同步失败'); }
+  }
+
+  async function syncInterviewAnswer(qid) {
+    const q = todayQuestions?.find(x => x.id === qid); if (!q) return;
+    const fields = { '日期': new Date(todayStr + 'T00:00:00+08:00').getTime(), '题目编号': q.num, '题目内容': q.title, '知识点': q.knowledge };
+    if (state.reflections[qid]) fields['我的答案'] = state.reflections[qid];
+    if (state.aiComments && state.aiComments[qid]) fields['AI点评'] = state.aiComments[qid];
+    
+    const path = `/bitable/v1/apps/${FEISHU.baseId}/tables/${FEISHU.interviewTableId}/records`;
+    try {
+      if (!interviewRecordIds[qid]) {
+        const d = await feishuAPI('GET', `${path}?filter=${encodeURIComponent(`AND(CurrentValue.[日期]=${fields['日期']},CurrentValue.[题目编号]=${q.num})`)}`);
+        if (d.data?.items) interviewRecordIds[qid] = d.data.items[0].record_id;
+      }
+      if (interviewRecordIds[qid]) await feishuAPI('PUT', `${path}/${interviewRecordIds[qid]}`, { fields });
+      else { const r = await feishuAPI('POST', path, { fields }); if (r.data?.record) interviewRecordIds[qid] = r.data.record.record_id; }
+    } catch(e) {}
+  }
+
+  // ── 周目标极简版 ────────────────────────────────────────────────
+  async function generateWeekly() {
+    const weekNum = Math.floor((new Date(todayStr) - new Date('2026-03-10')) / 86400000 / 7) + 1;
+    const cacheKey = 'weekly_w' + weekNum;
+    let weekly = lload(cacheKey, null);
+    if (!weekly) {
+      weekly = await askGemini(`AI PM转型教练，为第${weekNum}周生成3个学习目标。按JSON返回:{"theme":"..","goals":[{"title":"..","desc":".."}]}`, { theme: 'AI PM 知识突击', goals: [{ title: '打通RAG基础', desc: '搞懂向量检索原理' }] });
+      lsave(cacheKey, weekly);
+    }
+    const c = document.getElementById('weekly-container');
+    c.innerHTML = weekly.goals.map((g, i) => {
+      const key = `w${weekNum}_${i+1}`; const isDone = state.weekly[key];
+      return `<div class="weekly-block">
+        <div style="font-size:10px;color:var(--gold);margin-bottom:8px;">📌 目标 ${i+1}</div>
+        <div style="font-size:16px;margin-bottom:8px;">${g.title}</div>
+        <textarea class="weekly-input" placeholder="贴入笔记..." oninput="state.reflections['${key}']=this.value;lsave('state',state);">${state.reflections[key]||''}</textarea>
+        <button class="weekly-check-btn ${isDone?'done':''}" onclick="state.weekly['${key}']=!state.weekly['${key}'];lsave('state',state);this.classList.toggle('done');">标记完成</button>
+      </div>`;
+    }).join('');
+  }
+
+  // ── 核心驱动 ─────────────────────────────────────────────
+  function switchTab(name) {
+    document.querySelectorAll('.tab-panel, .tab-btn').forEach(el => el.classList.remove('active'));
+    document.getElementById('tab-' + name).classList.add('active');
+    event.currentTarget.classList.add('active');
+  }
+
+  function updateProgress() {
+    let doneCount = (state.done['knowledge'] ? 1 : 0) + (state.done['interview'] ? 1 : 0);
+    document.getElementById('mainProgress').style.width = (doneCount / 2 * 100) + '%';
+    document.getElementById('progressText').textContent = doneCount + ' / 2 完成';
+    if(state.done['knowledge']) document.getElementById('btn-knowledge').classList.add('checked');
+  }
+
+  function adjustLayout() {
+    const header = document.querySelector('.header'); const tabNav = document.querySelector('.tab-nav');
+    if (!header || !tabNav) return;
+    document.documentElement.style.setProperty('--header-h', header.offsetHeight + 'px');
+    tabNav.style.top = header.offsetHeight + 'px';
+    document.body.style.paddingTop = (header.offsetHeight + tabNav.offsetHeight) + 'px';
+  }
+  window.addEventListener('resize', adjustLayout);
+
+  async function init() {
+    if (!checkGlobalAuth()) return;
+    adjustLayout();
+    updateProgress();
+    generateKnowledge();
+    renderInterview();
+    generateWeekly();
+  }
+
+  init();
+</script>
+</body>
+</html>
+
+
+<!-- <!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>茹婷的AI PM成长计划</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@400;700&family=Space+Mono:wght@400;700&family=Noto+Sans+SC:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --ink: #1a1410;
+    --paper: #f5f0e8;
+    --accent: #c84b2f;
+    --gold: #d4a843;
+    --muted: #8a7d6e;
+    --green: #3a7d44;
+    --card-bg: #faf7f2;
+    --border: #d9d0c0;
+  }
 
   * { margin: 0; padding: 0; box-sizing: border-box; }
 
@@ -1409,4 +1891,4 @@
   init();
 </script>
 </body>
-</html>
+</html> -->
