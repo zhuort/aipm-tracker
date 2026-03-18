@@ -417,17 +417,30 @@
       </div>`;
     }).join('') + `<div class="check-row"><button class="check-btn" id="btn-interview" onclick="toggleInterviewDone()">标记完成 ✓</button></div>`;
     
-    if (state.done['interview']) document.getElementById('btn-interview').classList.add('checked');
+    // 🚨 修复：页面初次加载时，如果已完成，也要把文字变成“撤销完成”
+    if (state.done['interview']) {
+      const btn = document.getElementById('btn-interview');
+      btn.classList.add('checked');
+      btn.textContent = '撤销完成'; 
+    }
   }
 
   function toggleInterviewDone() {
     state.done['interview'] = !state.done['interview'];
     const btn = document.getElementById('btn-interview');
-    if (state.done['interview']) btn.classList.add('checked'); else btn.classList.remove('checked');
+    
+    // 🚨 修复：点击按钮时，同时切换样式和文字
+    if (state.done['interview']) {
+      btn.classList.add('checked');
+      btn.textContent = '撤销完成';
+    } else {
+      btn.classList.remove('checked');
+      btn.textContent = '标记完成 ✓';
+    }
+    
     updateProgress(); scheduleSync();
     if (todayQuestions) todayQuestions.forEach(q => syncInterviewAnswer(q.id));
   }
-
   // ── 同步逻辑 ────────────────────────────────────────────────
   function saveReflect(id, val) { state.reflections[id] = val; lsave('state', state); scheduleSync(); }
 
@@ -442,7 +455,13 @@
     const tasks = []; if (state.done['knowledge']) tasks.push('每日知识'); if (state.done['interview']) tasks.push('每日面经');
     fields['任务ID'] = tasks.join(',') || '未打卡';
     fields['是否完成'] = tasks.length > 0;
+    
     if (state.reflections['knowledge']) fields['思考内容'] = '[每日知识总结]\n' + state.reflections['knowledge'];
+    
+    // 🚨 核心修复：把每日知识的 AI 点评，装载到飞书主表的“AI点评”字段中
+    if (state.aiComments && state.aiComments['knowledge']) {
+      fields['AI点评'] = state.aiComments['knowledge'];
+    }
 
     const path = `/bitable/v1/apps/${FEISHU.baseId}/tables/${FEISHU.tableId}/records`;
     try {
