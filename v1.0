@@ -1,0 +1,1412 @@
+<!-- <!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>茹婷的AI PM成长计划</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@400;700&family=Space+Mono:wght@400;700&family=Noto+Sans+SC:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --ink: #1a1410;
+    --paper: #f5f0e8;
+    --accent: #c84b2f;
+    --gold: #d4a843;
+    --muted: #8a7d6e;
+    --green: #3a7d44;
+    --card-bg: #faf7f2;
+    --border: #d9d0c0;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: var(--paper);
+    color: var(--ink);
+    font-family: 'Noto Sans SC', sans-serif;
+    font-weight: 300;
+    min-height: 100vh;
+    padding: 0 0 80px 0;
+  }
+
+  /* Header */
+  .header {
+    background: var(--ink);
+    color: var(--paper);
+    padding: 10px 20px 0;
+    position: fixed;
+    top: 0; left: 0; right: 0;
+    z-index: 100;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+  }
+
+  .header::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background: repeating-linear-gradient(
+      90deg,
+      transparent,
+      transparent 60px,
+      rgba(255,255,255,0.02) 60px,
+      rgba(255,255,255,0.02) 61px
+    );
+    pointer-events: none;
+  }
+
+  .header-top {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 8px;
+  }
+
+  .header-title {
+    font-family: 'Noto Serif SC', serif;
+    font-size: 14px;
+    letter-spacing: 1px;
+    position: relative;
+  }
+
+  .header-subtitle {
+    font-family: 'Space Mono', monospace;
+    font-size: 9px;
+    color: var(--gold);
+    letter-spacing: 2px;
+    margin-top: 2px;
+    text-transform: uppercase;
+  }
+
+  .date-badge {
+    font-family: 'Space Mono', monospace;
+    font-size: 9px;
+    color: rgba(245,240,232,0.5);
+    text-align: right;
+  }
+
+  .progress-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 0;
+  }
+
+  .progress-bar-wrap {
+    flex: 1;
+    height: 2px;
+    background: rgba(255,255,255,0.15);
+    border-radius: 2px;
+    overflow: hidden;
+  }
+
+  .progress-bar-fill {
+    height: 100%;
+    background: var(--gold);
+    border-radius: 2px;
+    transition: width 0.6s ease;
+  }
+
+  .progress-text {
+    font-family: 'Space Mono', monospace;
+    font-size: 12px;
+    color: var(--gold);
+    white-space: nowrap;
+  }
+
+  /* Tab Nav */
+  .tab-nav {
+    display: flex;
+    border-bottom: 1px solid var(--border);
+    padding: 0 24px;
+    background: var(--card-bg);
+    position: sticky;
+    top: 0;
+    z-index: 10;
+  }
+
+  .tab-btn {
+    padding: 16px 20px;
+    font-size: 13px;
+    font-family: 'Noto Sans SC', sans-serif;
+    font-weight: 400;
+    border: none;
+    background: none;
+    cursor: pointer;
+    color: var(--muted);
+    border-bottom: 2px solid transparent;
+    margin-bottom: -1px;
+    transition: all 0.2s;
+    letter-spacing: 0.5px;
+  }
+
+  .tab-btn.active {
+    color: var(--accent);
+    border-bottom-color: var(--accent);
+  }
+
+  /* Main content */
+  .content {
+    max-width: 760px;
+    margin: 0 auto;
+    padding: 32px 24px;
+  }
+
+  /* Day card */
+  .day-card {
+    background: var(--card-bg);
+    border: 1px solid var(--border);
+    border-radius: 2px;
+    margin-bottom: 24px;
+    overflow: hidden;
+    transition: box-shadow 0.2s;
+  }
+
+  .day-card:hover {
+    box-shadow: 4px 4px 0 var(--border);
+  }
+
+  .day-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 18px 24px;
+    border-bottom: 1px solid var(--border);
+    cursor: pointer;
+  }
+
+  .day-label {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+  }
+
+  .day-num {
+    font-family: 'Space Mono', monospace;
+    font-size: 11px;
+    font-weight: 700;
+    color: var(--accent);
+    letter-spacing: 2px;
+    background: rgba(200,75,47,0.08);
+    padding: 4px 10px;
+    border-radius: 2px;
+  }
+
+  .day-title {
+    font-family: 'Noto Serif SC', serif;
+    font-size: 16px;
+    color: var(--ink);
+  }
+
+  .day-status {
+    font-family: 'Space Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 1px;
+    padding: 4px 10px;
+    border-radius: 2px;
+  }
+
+  .day-status.done {
+    background: rgba(58,125,68,0.1);
+    color: var(--green);
+  }
+
+  .day-status.pending {
+    background: rgba(138,125,110,0.1);
+    color: var(--muted);
+  }
+
+  /* Task body */
+  .day-body {
+    padding: 24px;
+    display: none;
+  }
+
+  .day-body.open {
+    display: block;
+    animation: slideDown 0.25s ease;
+  }
+
+  @keyframes slideDown {
+    from { opacity: 0; transform: translateY(-8px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  /* Article summary */
+  .article-block {
+    border-left: 3px solid var(--gold);
+    padding: 16px 20px;
+    background: rgba(212,168,67,0.05);
+    margin-bottom: 20px;
+    border-radius: 0 2px 2px 0;
+  }
+
+  .article-meta {
+    font-family: 'Space Mono', monospace;
+    font-size: 10px;
+    color: var(--muted);
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    margin-bottom: 8px;
+  }
+
+  .article-title {
+    font-family: 'Noto Serif SC', serif;
+    font-size: 15px;
+    font-weight: 700;
+    margin-bottom: 12px;
+    color: var(--ink);
+    line-height: 1.5;
+  }
+
+  .article-summary {
+    font-size: 13px;
+    line-height: 1.9;
+    color: #3a3028;
+  }
+
+  .article-summary p {
+    margin-bottom: 10px;
+  }
+
+  /* Key points */
+  .keypoints {
+    margin: 20px 0;
+  }
+
+  .keypoints-title {
+    font-family: 'Space Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 2px;
+    color: var(--muted);
+    text-transform: uppercase;
+    margin-bottom: 12px;
+  }
+
+  .keypoint {
+    display: flex;
+    gap: 12px;
+    margin-bottom: 10px;
+    align-items: flex-start;
+  }
+
+  .keypoint-dot {
+    width: 6px;
+    height: 6px;
+    background: var(--accent);
+    border-radius: 50%;
+    margin-top: 7px;
+    flex-shrink: 0;
+  }
+
+  .keypoint-text {
+    font-size: 13px;
+    line-height: 1.75;
+    color: #3a3028;
+  }
+
+  /* Reflection prompt */
+  .reflection-block {
+    background: rgba(26,20,16,0.03);
+    border: 1px solid var(--border);
+    border-radius: 2px;
+    padding: 16px 20px;
+    margin-top: 20px;
+  }
+
+  .reflection-label {
+    font-family: 'Space Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 2px;
+    color: var(--accent);
+    text-transform: uppercase;
+    margin-bottom: 10px;
+  }
+
+  .reflection-q {
+    font-size: 13px;
+    color: var(--ink);
+    font-style: italic;
+    line-height: 1.7;
+    font-family: 'Noto Serif SC', serif;
+    margin-bottom: 12px;
+  }
+
+  .reflection-input {
+    width: 100%;
+    border: 1px solid var(--border);
+    background: white;
+    padding: 12px;
+    font-family: 'Noto Sans SC', sans-serif;
+    font-size: 13px;
+    color: var(--ink);
+    resize: vertical;
+    min-height: 80px;
+    outline: none;
+    border-radius: 1px;
+    transition: border-color 0.2s;
+  }
+
+  .reflection-input:focus {
+    border-color: var(--accent);
+  }
+
+  /* Check button */
+  .check-row {
+    display: flex;
+    justify-content: flex-end;
+    margin-top: 20px;
+    gap: 10px;
+    align-items: center;
+  }
+
+  .check-btn {
+    font-family: 'Space Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    padding: 10px 24px;
+    border: 1.5px solid var(--ink);
+    background: transparent;
+    color: var(--ink);
+    cursor: pointer;
+    transition: all 0.15s;
+    border-radius: 1px;
+  }
+
+  .check-btn:hover:not(:disabled) {
+    background: var(--ink);
+    color: var(--paper);
+  }
+
+  .check-btn.checked {
+    background: var(--green);
+    border-color: var(--green);
+    color: white;
+  }
+
+  .check-btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+
+  /* Weekly goal */
+  .weekly-block {
+    background: var(--ink);
+    color: var(--paper);
+    padding: 24px;
+    border-radius: 2px;
+    margin-top: 32px;
+  }
+
+  .weekly-label {
+    font-family: 'Space Mono', monospace;
+    font-size: 10px;
+    color: var(--gold);
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    margin-bottom: 12px;
+  }
+
+  .weekly-title {
+    font-family: 'Noto Serif SC', serif;
+    font-size: 18px;
+    margin-bottom: 12px;
+  }
+
+  .weekly-desc {
+    font-size: 13px;
+    color: rgba(245,240,232,0.7);
+    line-height: 1.8;
+  }
+
+  .weekly-check-btn {
+    margin-top: 16px;
+    font-family: 'Space Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 1px;
+    padding: 8px 20px;
+    border: 1px solid var(--gold);
+    background: transparent;
+    color: var(--gold);
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+
+  .weekly-check-btn:hover, .weekly-check-btn.done {
+    background: var(--gold);
+    color: var(--ink);
+  }
+  
+  /* 周目标专属输入框 */
+  .weekly-input {
+    width: 100%;
+    border: 1px solid var(--border);
+    background: rgba(255, 255, 255, 0.6);
+    padding: 10px;
+    font-family: 'Noto Sans SC', sans-serif;
+    font-size: 12px;
+    color: var(--ink);
+    resize: vertical;
+    min-height: 70px;
+    outline: none;
+    border-radius: 2px;
+    margin-top: 10px;
+    transition: all 0.2s;
+  }
+
+  .weekly-input:focus {
+    border-color: var(--gold);
+    background: white;
+    box-shadow: 0 2px 8px rgba(212, 168, 67, 0.1);
+  }
+
+  /* Section header */
+  .section-hd {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 20px;
+  }
+
+  .section-hd h2 {
+    font-family: 'Noto Serif SC', serif;
+    font-size: 18px;
+    font-weight: 700;
+  }
+
+  .section-hd-line {
+    flex: 1;
+    height: 1px;
+    background: var(--border);
+  }
+
+  /* Tag */
+  .tag {
+    display: inline-block;
+    font-family: 'Space Mono', monospace;
+    font-size: 9px;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    padding: 3px 8px;
+    border-radius: 2px;
+    margin-right: 6px;
+    margin-bottom: 8px;
+  }
+
+  .tag-blue { background: rgba(47,100,200,0.1); color: #2f64c8; }
+  .tag-red { background: rgba(200,75,47,0.1); color: var(--accent); }
+  .tag-green { background: rgba(58,125,68,0.1); color: var(--green); }
+
+  /* Hidden tab panels */
+  .tab-panel { display: none; }
+  .tab-panel.active { display: block; }
+
+  /* Streak */
+  .streak-row {
+    display: flex;
+    gap: 6px;
+    margin-bottom: 28px;
+    flex-wrap: wrap;
+  }
+
+  .streak-dot {
+    width: 28px;
+    height: 28px;
+    border-radius: 2px;
+    border: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: 'Space Mono', monospace;
+    font-size: 9px;
+    color: var(--muted);
+    transition: all 0.2s;
+  }
+
+  .streak-dot.done {
+    background: var(--ink);
+    border-color: var(--ink);
+    color: var(--gold);
+  }
+
+  .streak-dot.today {
+    border-color: var(--accent);
+    color: var(--accent);
+  }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="header-top">
+    <div>
+      <div class="header-title">茹婷的 AI PM 成长计划</div>
+      <div class="header-subtitle">Bank PM → AI PM · 每日打卡</div>
+    </div>
+    <div style="display:flex;flex-direction:column;align-items:flex-end;gap:4px;">
+      <div class="date-badge" id="dateBadge"></div>
+      <span id="syncStatus" style="font-family:'Space Mono',monospace;font-size:9px;letter-spacing:1px;color:#d4a843;">连接数据中...</span>
+    </div>
+  </div>
+  <div class="progress-row" style="padding-bottom:8px;">
+    <div class="progress-bar-wrap">
+      <div class="progress-bar-fill" id="mainProgress" style="width:0%"></div>
+    </div>
+    <div class="progress-text" id="progressText">0 / 4 完成</div>
+  </div>
+</div>
+
+<div class="tab-nav" style="position:fixed;top:var(--header-h,72px);left:0;right:0;z-index:99;">
+  <button class="tab-btn active" onclick="switchTab('learn')">📚 学习任务</button>
+  <button class="tab-btn" onclick="switchTab('interview')">🎯 每日面经</button>
+  <button class="tab-btn" onclick="switchTab('weekly')">📌 周目标</button>
+</div>
+
+<div class="tab-panel active content" id="tab-learn">
+
+  <div class="section-hd">
+    <h2>本周学习任务</h2>
+    <div class="section-hd-line"></div>
+    <span style="font-family:'Space Mono',monospace;font-size:10px;color:var(--muted);">3天循环</span>
+  </div>
+
+  <div class="streak-row" id="streakRow"></div>
+
+  <div class="day-card" id="card-day1">
+    <div class="day-header" onclick="toggleCard('day1')">
+      <div class="day-label">
+        <span class="day-num">DAY 1</span>
+        <span class="day-title">LLM / Agent 前沿动态</span>
+      </div>
+      <span class="day-status pending" id="status-day1">待完成</span>
+    </div>
+    <div class="day-body" id="body-day1">
+      <div id="day1-content">
+        <div style="padding:24px;text-align:center;color:var(--muted);font-family:'Space Mono',monospace;font-size:11px;letter-spacing:1px;">AI 生成中...</div>
+      </div>
+      <div class="reflection-block">
+        <div class="reflection-label">💭 今日思考题</div>
+        <div class="reflection-q" id="day1-reflection-q">加载中...</div>
+        <textarea class="reflection-input" id="reflect-day1" placeholder="在这里写下你的思考...（会自动保存）" oninput="saveReflect('day1', this.value)"></textarea>
+      </div>
+      <div class="check-row">
+        <span style="font-size:12px;color:var(--muted);">预计耗时 20 分钟</span>
+        <button class="check-btn" id="btn-day1" onclick="markDone('day1')">标记完成 ✓</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="day-card" id="card-day2">
+    <div class="day-header" onclick="toggleCard('day2')">
+      <div class="day-label">
+        <span class="day-num">DAY 2</span>
+        <span class="day-title">拆解非金融 AI 产品</span>
+      </div>
+      <span class="day-status pending" id="status-day2">待完成</span>
+    </div>
+    <div class="day-body" id="body-day2">
+      <div id="day2-content">
+        <div style="padding:24px;text-align:center;color:var(--muted);font-family:'Space Mono',monospace;font-size:11px;letter-spacing:1px;">AI 生成中...</div>
+      </div>
+      <div class="reflection-block">
+        <div class="reflection-label">💭 今日思考题</div>
+        <div class="reflection-q" id="day2-reflection-q">加载中...</div>
+        <textarea class="reflection-input" id="reflect-day2" placeholder="在这里写下你的思考...（会自动保存）" oninput="saveReflect('day2', this.value)"></textarea>
+      </div>
+      <div class="check-row">
+        <span style="font-size:12px;color:var(--muted);">预计耗时 30 分钟</span>
+        <button class="check-btn" id="btn-day2" onclick="markDone('day2')">标记完成 ✓</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="day-card" id="card-day3">
+    <div class="day-header" onclick="toggleCard('day3')">
+      <div class="day-label">
+        <span class="day-num">DAY 3</span>
+        <span class="day-title">用 LLM 视角重新表达你的经历</span>
+      </div>
+      <span class="day-status pending" id="status-day3">待完成</span>
+    </div>
+    <div class="day-body" id="body-day3">
+      <div id="day3-content">
+        <div style="padding:24px;text-align:center;color:var(--muted);font-family:'Space Mono',monospace;font-size:11px;letter-spacing:1px;">AI 生成中...</div>
+      </div>
+      <div class="reflection-block">
+        <div class="reflection-label">✍️ 今日输出任务</div>
+        <div class="reflection-q" id="day3-reflection-q">加载中...</div>
+        <textarea class="reflection-input" id="reflect-day3" placeholder="在这里写下你的新版项目描述..." oninput="saveReflect('day3', this.value)" style="min-height:120px;"></textarea>
+      </div>
+      <div class="check-row">
+        <span style="font-size:12px;color:var(--muted);">预计耗时 20 分钟</span>
+        <button class="check-btn" id="btn-day3" onclick="markDone('day3')">标记完成 ✓</button>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<div class="tab-panel content" id="tab-interview">
+  <div class="section-hd">
+    <h2>每日面经题</h2>
+    <div class="section-hd-line"></div>
+    <span style="font-family:'Space Mono',monospace;font-size:10px;color:var(--muted);">每天2道 · 同步飞书</span>
+  </div>
+  <div id="interview-container"></div>
+</div>
+
+<div class="tab-panel content" id="tab-weekly">
+  <div class="section-hd">
+    <h2>周目标</h2>
+    <div class="section-hd-line"></div>
+    <span style="font-family:'Space Mono',monospace;font-size:10px;color:var(--muted);">每周一个具体产出</span>
+  </div>
+  <div id="weekly-container">
+    <div style="padding:24px;text-align:center;color:var(--muted);font-family:'Space Mono',monospace;font-size:11px;letter-spacing:1px;">AI 生成中...</div>
+  </div>
+</div>
+
+<script>
+  // ── 核心配置 ──────────────────────
+  const API_BASE = 'https://aipm-api.rutingzhuo05.workers.dev';
+  
+  const FEISHU = {
+    appId:            'cli_a9248a4017f8dcb3',
+    baseId:           'KiBzbaG9patb0isx4oGcUbPWnOe',
+    tableId:          'tblX1j2AaKiDalFp',
+    interviewTableId: 'tblrik3BihWl2tIt',
+    weeklyTableId:    'tblYzYS7D7vEqNdf',
+  };
+
+  // ── 日期计算 ──────────────────────
+  const now = new Date();
+  const offset = now.getTimezoneOffset() * 60000;
+  const localISOTime = (new Date(now.getTime() - offset)).toISOString().slice(0, -1);
+  const todayStr = localISOTime.slice(0, 10);
+  
+  const opts = { year: 'numeric', month: 'long', day: 'numeric', weekday: 'long' };
+  document.getElementById('dateBadge').textContent = now.toLocaleDateString('zh-CN', opts);
+
+  function lsave(key, val) { try { localStorage.setItem('aipm_' + key, JSON.stringify(val)); } catch(e){} }
+  function lload(key, def) { try { const v = localStorage.getItem('aipm_' + key); return v !== null ? JSON.parse(v) : def; } catch(e){ return def; } }
+
+  // ── 全局密码验证与拦截 ──────────────────────────────────────────
+  const CORRECT_PWD = 'ruting2026';
+  let isAuthorized = lload('authorized', false);
+
+  function checkGlobalAuth() {
+    if (isAuthorized) return true;
+    const input = prompt('🔐 茹婷的 AI PM 成长空间\n请输入专属打卡密码：');
+    if (input === CORRECT_PWD) {
+      isAuthorized = true;
+      lsave('authorized', true);
+      return true;
+    } else {
+      alert('密码错误！你没有权限访问此页面哦。');
+      document.body.innerHTML = '<h2 style="text-align:center;margin-top:20vh;color:#c84b2f;font-family:\'Noto Serif SC\', serif;">🚧 无访问权限</h2>';
+      return false;
+    }
+  }
+
+  function setSyncStatus(status, msg) {
+    const el = document.getElementById('syncStatus');
+    if (!el) return;
+    const colors = { syncing: '#d4a843', ok: '#3a7d44', err: '#c84b2f', offline: '#8a7d6e' };
+    el.style.color = colors[status] || '#8a7d6e';
+    el.textContent = msg;
+  }
+
+  // ── 全局状态存储 (加入了 aiComments) ───────────────────────────
+  let state = lload('state', { done: {}, reflections: {}, exercises: {}, weekly: {}, aiComments: {} });
+  let dayDone = lload('dayDone', []);
+  let token = null;
+  let syncTimeout = null;
+  let todayRecordId = lload('recordId_' + todayStr, null);
+  let interviewRecordIds = lload('interviewRecordIds_' + todayStr, {});
+  let weeklyRecordIds = lload('weeklyRecordIds', {});
+
+  // ── API 封装 (Gemini JSON接口，生成学习任务和面经) ───────────────────
+  async function askGemini(prompt, fallbackData) {
+    try {
+      // 🚨 核心修复 1：偷偷给大模型加一句“紧箍咒”，强制要求合法格式，禁止随意换行
+      const strictPrompt = prompt + "\n【系统强制指令】：请严格输出可被彻底解析的合法 JSON 格式。所有字符串值内部绝对不允许出现真实的换行符，如果需要分段请务必使用 '\\n' 代替！不要输出任何 Markdown 标记。";
+
+      const res = await fetch(API_BASE + '/gemini', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          contents: [{ parts: [{ text: strictPrompt }] }],
+          generationConfig: { 
+            temperature: 0.7,
+            maxOutputTokens: 4000, // 🚨 核心修复 2：给足 4000 个 Token 的额度，坚决防止大模型写到一半被掐断
+            responseMimeType: "application/json"
+          }
+        })
+      });
+      const data = await res.json();
+      
+      if (!res.ok || data.error) return fallbackData; 
+      if (!data.candidates || data.candidates.length === 0) return fallbackData;
+
+      const text = data.candidates[0].content.parts.map(p => p.text).join('');
+      
+      // 🚨 核心修复 3：再加一层双保险，强制清理大模型可能偷偷加上的 Markdown 标记
+      const clean = text.replace(/```json/gi, '').replace(/```/g, '').trim();
+      
+      return JSON.parse(clean);
+    } catch(e) {
+      console.error('Gemini JSON 解析失败，已触发兜底保护:', e);
+      return fallbackData; 
+    }
+  }
+  // ── API 封装 (Gemini 纯文本接口，用于AI点评) ───────────────────
+  async function askGeminiText(prompt, fallbackText) {
+    try {
+      const res = await fetch(API_BASE + '/gemini', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          contents: [{ parts: [{ text: prompt }] }],
+          generationConfig: { temperature: 0.7 } // 🚨 核心修复 2：去掉 maxOutputTokens 限制，防止强行截断
+        })
+      });
+      const data = await res.json();
+
+      if (!res.ok || data.error) return `⚠️ AI 暂时无法点评 (错误码: ${res.status})。`;
+      if (data.promptFeedback && data.promptFeedback.blockReason) return `⚠️ 抱歉，内容触发了安全审查。`;
+      if (data.candidates && data.candidates.length > 0 && data.candidates[0].finishReason === 'SAFETY') return `⚠️ AI 生成内容触发了安全审查被中断。`;
+
+      if (data.candidates && data.candidates[0].content) {
+        // 🚨 核心修复 3：把所有点评的碎片拼接成完整的长段落
+        return data.candidates[0].content.parts.map(p => p.text).join('').trim();
+      }
+      return fallbackText;
+    } catch(e) {
+      console.error('Gemini 纯文本请求失败', e);
+      return fallbackText;
+    }
+  }
+  
+  // ── 获取飞书 Token ─────────────────────────────────────
+  async function getToken() {
+    if (token) return token;
+    try {
+      const res = await fetch(API_BASE + '/feishu/auth/v3/tenant_access_token/internal', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ app_id: FEISHU.appId }) 
+      });
+      const data = await res.json();
+      if (data.tenant_access_token) {
+        token = data.tenant_access_token;
+        setTimeout(() => { token = null; }, 110 * 60 * 1000);
+        return token;
+      }
+    } catch(e) { console.error('Token获取失败', e); }
+    return null;
+  }
+
+  async function feishuAPI(method, path, body) {
+    const tk = await getToken();
+    if (!tk) throw new Error('no token');
+    const opts = {
+      method,
+      headers: { 'Authorization': 'Bearer ' + tk, 'Content-Type': 'application/json' }
+    };
+    if (body) opts.body = JSON.stringify(body);
+    const res = await fetch(API_BASE + '/feishu' + path, opts);
+    return res.json();
+  }
+
+  // ── 生成：每日学习任务 (Day 1-3) ──────────────────────────────
+  async function generateDay1WithGemini() {
+    const cached = lload('day1_' + todayStr, null);
+    if (cached) { renderDay1(cached); return; }
+    const prompt = `你是一位AI产品经理成长导师。今天是${todayStr}，请为以下学员生成一篇今日AI前沿动态摘要：
+学员背景：卓茹婷，宁波银行产品经理，正在转型AI产品经理，有金融智能客服（ASR+RAG+NER）经验。
+要求：
+1. 选取今天最值得关注的1个AI技术/产品进展
+2. 用金融AI PM的视角解读，说明为什么重要
+3. 提炼3个关键点，结合她的银行经验
+4. 给出1道思考题
+请严格按以下JSON格式返回，不要有任何其他文字：
+{
+  "title": "今日主题标题",
+  "summary": "3-4句话的核心摘要",
+  "keypoints": [ {"label": "标题", "content": "具体内容"} ],
+  "reflection": "思考题内容"
+}`;
+    const fallback = { title: 'AI Agent 重塑金融客服', summary: '金融行业智能客服正在经历从"问答机器人"到"自主服务Agent"的跃迁。', keypoints: [{ label: 'Agent ≠ 聊天机器人', content: 'Agent能自主规划步骤。' }], reflection: '如果用Agent重构坐席辅助，你会怎么做？' };
+    const article = await askGemini(prompt, fallback);
+    lsave('day1_' + todayStr, article);
+    renderDay1(article);
+  }
+
+  function renderDay1(article) {
+    const container = document.getElementById('day1-content');
+    if (!container) return;
+    container.innerHTML = `<div class="article-block"><div class="article-meta">📰 今日前沿 · AI 动态</div><div class="article-title">${article.title}</div><div class="article-summary"><p><span class="tag tag-blue">今日摘要</span>${article.summary}</p></div></div><div class="keypoints"><div class="keypoints-title">🔑 你需要记住的关键点</div>${article.keypoints.map(kp => `<div class="keypoint"><div class="keypoint-dot"></div><div class="keypoint-text"><strong>${kp.label}</strong>：${kp.content}</div></div>`).join('')}</div>`;
+    const rq = document.getElementById('day1-reflection-q');
+    if (rq) rq.textContent = article.reflection;
+  }
+
+  async function generateDay2WithGemini() {
+    const cached = lload('day2_' + todayStr, null);
+    if (cached) { renderDay2(cached); return; }
+    const products = ['Cursor', 'Perplexity', 'Linear', 'Descript', 'Gamma'];
+    const start = new Date('2026-03-10');
+    const dayIndex = Math.floor((new Date(todayStr) - start) / 86400000);
+    const product = products[dayIndex % products.length];
+    const prompt = `你是一位AI导师。请帮学员(转型AI PM,有智能客服经验)拆解非金融AI产品：${product}。请严格按JSON返回：\n{"product": "${product}", "title": "...", "summary": "...", "keypoints": [{"label":"...", "content":"..."}], "reflection": "..."}`;
+    const fallback = { product: 'Cursor', title: '提升10倍效率的编辑器', summary: 'AI深度嵌入编辑器', keypoints: [{ label: '上下文感知', content: '理解全局代码' }], reflection: '你的系统如何扩大上下文理解？' };
+    const article = await askGemini(prompt, fallback);
+    lsave('day2_' + todayStr, article);
+    renderDay2(article);
+  }
+
+  function renderDay2(article) {
+    const container = document.getElementById('day2-content');
+    if (!container) return;
+    container.innerHTML = `<div class="article-block"><div class="article-meta">🔍 产品拆解 · 今日案例：${article.product}</div><div class="article-title">${article.title}</div><div class="article-summary"><p><span class="tag tag-blue">产品概览</span>${article.summary}</p></div></div><div class="keypoints"><div class="keypoints-title">🔑 借鉴视角</div>${article.keypoints.map(kp => `<div class="keypoint"><div class="keypoint-dot"></div><div class="keypoint-text"><strong>${kp.label}</strong>：${kp.content}</div></div>`).join('')}</div>`;
+    const rq = document.getElementById('day2-reflection-q');
+    if (rq) rq.textContent = article.reflection;
+  }
+
+  async function generateDay3WithGemini() {
+    const cached = lload('day3_' + todayStr, null);
+    if (cached) { renderDay3(cached); return; }
+    const projects = ['坐席辅助系统', '视频银行产品', '智能营销系统'];
+    const start = new Date('2026-03-10');
+    const dayIndex = Math.floor((new Date(todayStr) - start) / 86400000);
+    const project = projects[dayIndex % projects.length];
+    const prompt = `你是一位AI PM简历优化专家。帮学员重新表达经历：${project}。请按JSON返回：\n{"project": "${project}", "old_expression": "...", "new_expression": "...", "highlights": [{"label":"...","content":"..."}], "task": "..."}`;
+    const fallback = { project: '坐席辅助系统', old_expression: '基于BERT意图识别提升效率', new_expression: '设计Intent Agent完成路由与RAG话术推荐', highlights: [{ label: 'Agent思维', content: '体现AI新范式' }], task: '重写一行你的简历' };
+    const article = await askGemini(prompt, fallback);
+    lsave('day3_' + todayStr, article);
+    renderDay3(article);
+  }
+
+  function renderDay3(article) {
+    const container = document.getElementById('day3-content');
+    if (!container) return;
+    container.innerHTML = `<div class="article-block"><div class="article-meta">✍️ 简历训练 · ${article.project}</div><div class="article-title">用 AI 原生语言重新表达</div><div class="article-summary"><p><span class="tag tag-red">❌ 旧表达</span>${article.old_expression}</p><p style="margin-top:12px;"><span class="tag tag-green">✅ 新表达</span>${article.new_expression}</p></div></div><div class="keypoints"><div class="keypoints-title">🔑 亮点</div>${article.highlights.map(h => `<div class="keypoint"><div class="keypoint-dot"></div><div class="keypoint-text"><strong>${h.label}</strong>：${h.content}</div></div>`).join('')}</div>`;
+    const rq = document.getElementById('day3-reflection-q');
+    if (rq) rq.textContent = article.task;
+  }
+
+  // ── 生成：周目标与 UI 渲染 ────────────────────────────────────
+  async function generateWeeklyWithGemini() {
+    const start = new Date('2026-03-10');
+    const dayIndex = Math.floor((new Date(todayStr) - start) / 86400000);
+    const weekNum = Math.floor(dayIndex / 7) + 1;
+    const cacheKey = 'weekly_w' + weekNum;
+    const cached = lload(cacheKey, null);
+    if (cached) { 
+      renderWeekly(cached, weekNum); 
+      loadWeeklyFromFeishu(weekNum);
+      return; 
+    }
+    
+    const prompt = `你是一位AI产品经理转型教练。请为学员生成第${weekNum}周的4个学习目标。学员背景：转型AI PM，4年金融经验。按JSON返回：\n{"week": ${weekNum}, "theme": "本周主题", "goals": [{"title": "...", "desc": "..."}, {"title": "...", "desc": "..."}, {"title": "...", "desc": "..."}, {"title": "...", "desc": "..."}]}`;
+    const fallback = { week: weekNum, theme: 'AI PM 知识建立', goals: [{ title: '写一篇行业文章', desc: '分享经验' }, { title: '整理产品方法论', desc: '可视化框架' }, { title: '投递目标公司', desc: '找能力Gap' }, { title: '准备核心面试题', desc: '打磨答案' }] };
+
+    const weekly = await askGemini(prompt, fallback);
+    lsave(cacheKey, weekly);
+    renderWeekly(weekly, weekNum);
+    loadWeeklyFromFeishu(weekNum);
+  }
+
+  function renderWeekly(weekly, weekNum) {
+    const container = document.getElementById('weekly-container');
+    if (!container) return;
+    
+    container.innerHTML = weekly.goals.map((g, i) => {
+      const n = i + 1;
+      const key = `w${weekNum}_${n}`;
+      const isDone = state.weekly && state.weekly[key];
+      const savedContent = (state.reflections && state.reflections[key]) || '';
+
+      return `
+        <div class="weekly-block" style="${isDone ? '' : 'background:var(--card-bg);color:var(--ink);border:1px solid var(--border);'}">
+          <div class="weekly-label" style="${isDone ? '' : 'color:var(--muted);'}">
+            📌 第 ${weekNum} 周 · 目标 ${n}　
+            <span style="font-family:'Space Mono',monospace;font-size:9px;letter-spacing:1px;">${weekly.theme}</span>
+          </div>
+          <div class="weekly-title">${g.title}</div>
+          <div class="weekly-desc" style="${isDone ? '' : 'color:var(--muted);'}">${g.desc}</div>
+          
+          <div style="margin-top:15px;">
+            <div style="font-family:'Space Mono',monospace;font-size:9px;color:var(--gold);text-transform:uppercase;margin-bottom:5px;letter-spacing:1px;">
+              Document / Output
+            </div>
+            <textarea class="weekly-input" 
+              placeholder="贴入文章链接、笔记要点或完成说明..." 
+              oninput="saveWeeklyContent('${key}', this.value, ${weekNum})"
+              style="border-color:${isDone ? 'var(--gold)' : 'var(--border)'}">${savedContent}</textarea>
+          </div>
+
+          <button class="weekly-check-btn" id="weekly-btn-${n}" 
+            onclick="toggleWeeklyDynamic(${weekNum},${n})" 
+            style="${isDone ? '' : 'border-color:var(--muted);color:var(--muted);'}">
+            ${isDone ? '已完成 ✓' : '标记完成'}
+          </button>
+        </div>
+        <div style="height:16px;"></div>`;
+    }).join('');
+  }
+
+  function toggleWeeklyDynamic(weekNum, n) {
+    const key = `w${weekNum}_${n}`;
+    if (!state.weekly) state.weekly = {};
+    state.weekly[key] = !state.weekly[key];
+    const btn = document.getElementById('weekly-btn-' + n);
+    if (btn) { 
+      btn.textContent = state.weekly[key] ? '已完成 ✓' : '标记完成'; 
+      btn.style.borderColor = state.weekly[key] ? '' : 'var(--muted)'; 
+      btn.style.color = state.weekly[key] ? '' : 'var(--muted)'; 
+    }
+    syncWeeklyToFeishu(weekNum);
+  }
+
+  function saveWeeklyContent(key, val, weekNum) {
+    if (!state.reflections) state.reflections = {};
+    state.reflections[key] = val;
+    lsave('state', state);
+    clearTimeout(syncTimeout);
+    syncTimeout = setTimeout(() => { syncWeeklyToFeishu(weekNum); }, 1500);
+  }
+
+  // ── 生成：面试题与 AI点评逻辑 ────────────────────────────────────────────────
+  const Q_CATEGORIES = ['AI技术实操及AI知识面', '项目/产品经验类', '产品核心方法论', '行业/业务/趋势认知类'];
+  let usedTitles = lload('usedTitles', []);
+  let todayQuestions = lload('questions_' + todayStr, null);
+
+  async function getTodayQuestions() {
+    if (todayQuestions) return todayQuestions;
+    const start = new Date('2026-03-10');
+    const dayIndex = Math.floor((new Date(todayStr) - start) / 86400000);
+    const category = Q_CATEGORIES[Math.floor(dayIndex / 8) % Q_CATEGORIES.length];
+    const usedStr = usedTitles.length > 0 ? `\n已出题（不要重复）：\n${usedTitles.slice(-30).join('\n')}` : '';
+
+    const prompt = `资深AI产品经理面试官，为候选人(转型AI PM,金融背景)出2道题。类别：${category} ${usedStr}\n请按JSON返回：\n[{"title": "...", "framework": "...", "reference": "...", "knowledge": "..."}]`;
+    const fallback = [{ title: '谈谈对Agent的理解？', framework: '① 定义 ② 案例', reference: '具备自主规划能力的LLM应用', knowledge: 'Agent' }];
+    
+    try {
+      const questions = await askGemini(prompt, fallback);
+      todayQuestions = questions.map((q, i) => ({ id: 'q'+(i+1), num: i+1, category, ...q }));
+      lsave('questions_' + todayStr, todayQuestions);
+      todayQuestions.forEach(q => { if (!usedTitles.includes(q.title)) usedTitles.push(q.title); });
+      lsave('usedTitles', usedTitles);
+      return todayQuestions;
+    } catch(e) { return fallback; }
+  }
+
+  // 获取 AI 点评的函数
+  async function getAIEvaluation(qid) {
+    const userAnswer = state.reflections[qid] || '';
+    if (userAnswer.trim().length < 10) {
+      alert('请先写下你的答案（至少10个字），AI 才能给你精准点评哦！');
+      return;
+    }
+
+    const q = todayQuestions.find(x => x.id === qid);
+    if (!q) return;
+
+    const btn = document.getElementById('btn-ai-' + qid);
+    const commentBox = document.getElementById('ai-comment-' + qid);
+    const commentText = document.getElementById('ai-comment-text-' + qid);
+    
+    // 切换到 Loading 状态
+    btn.textContent = '🤖 AI 思考中...';
+    btn.disabled = true;
+    commentBox.style.display = 'block';
+    commentText.innerHTML = '<span style="color:var(--muted)">正在阅读你的答案并生成专业点评...</span>';
+
+    const prompt = `你是一位严厉且专业的资深AI产品经理面试官。
+    
+候选人回答了一道面试题。
+【题目】：${q.title}
+【参考答题框架】：${q.framework}
+【候选人答案】：${userAnswer}
+
+请对候选人的答案进行点评。要求：
+1. 肯定亮点（如果有）。
+2. 一针见血地指出不足（逻辑漏洞、脱离业务、缺乏深度等）。
+3. 给出1-2条具体的改进建议。
+4. 语气要像真实的面试官，专业客观。
+请直接输出点评的纯文本内容，分段落，不要使用Markdown加粗符号，字数控制在200-300字左右。`;
+
+    try {
+      const aiComment = await askGeminiText(prompt, 'AI 思考时开了个小差，请再点一次试试~');
+      
+      // 保存点评数据
+      if (!state.aiComments) state.aiComments = {};
+      state.aiComments[qid] = aiComment;
+      lsave('state', state);
+      
+      // 更新 UI
+      // 🚨 修复尖括号被浏览器吞掉的 Bug：先转义，再换行
+      const safeText = aiComment.replace(/</g, '&lt;').replace(/>/g, '&gt;');
+      commentText.innerHTML = safeText.replace(/\n/g, '<br>');
+      
+      btn.textContent = '重新获取点评';
+      btn.disabled = false;
+      
+      // 触发飞书同步
+      scheduleSync(qid);
+    } catch(e) {
+      commentText.innerHTML = '生成失败，请重试';
+      btn.textContent = '🤖 获取 AI 点评';
+      btn.disabled = false;
+    }
+  }
+
+  async function renderInterview() {
+    const container = document.getElementById('interview-container');
+    if (!container) return;
+    container.innerHTML = '<div style="padding:40px;text-align:center;font-family:\'Space Mono\',monospace;font-size:12px;color:var(--muted);">AI 正在生成今日面经题...</div>';
+    const qs = await getTodayQuestions();
+    container.innerHTML = qs.map((q, i) => {
+      const hasAiComment = state.aiComments && state.aiComments[q.id];
+      const aiCommentText = hasAiComment ? state.aiComments[q.id].replace(/\n/g, '<br>') : '';
+      
+      return `
+      <div class="day-card" style="margin-bottom:24px;">
+        <div class="day-header" onclick="this.nextElementSibling.classList.toggle('open')">
+          <div class="day-label"><span class="day-num" style="color:#9b59b6;background:rgba(155,89,182,0.08);">题目 ${String(i+1).padStart(2,'0')}</span><span class="day-title" style="font-size:14px;">${q.title}</span></div>
+          <span style="font-family:'Space Mono',monospace;font-size:9px;color:#9b59b6;letter-spacing:1px;">${q.category}</span>
+        </div>
+        <div class="day-body ${i===0?'open':''}">
+          <div class="keypoints"><div class="keypoints-title">📌 答题框架</div>${q.framework.split('\n').map(f => `<div class="keypoint"><div class="keypoint-dot" style="background:#9b59b6;"></div><div class="keypoint-text">${f.replace(/^[①②③④]/,'').trim()}</div></div>`).join('')}</div>
+          
+          <div class="reflection-block" style="background:rgba(155,89,182,0.03);border-color:rgba(155,89,182,0.2);">
+            
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
+              <div class="reflection-label" style="color:#9b59b6; margin-bottom:0;">✍️ 我的答案</div>
+              <button class="check-btn" style="padding:4px 12px; font-size:10px; border-color:#9b59b6; color:#9b59b6;" id="btn-ai-${q.id}" onclick="getAIEvaluation('${q.id}')">🤖 ${hasAiComment ? '重新获取点评' : '获取 AI 点评'}</button>
+            </div>
+            
+            <textarea class="reflection-input" id="reflect-${q.id}" placeholder="先写出来，不求完美，3-5分钟..." oninput="saveInterviewAnswer('${q.id}', this.value)" style="min-height:120px;">${state.reflections[q.id]||''}</textarea>
+            
+            <div id="ai-comment-${q.id}" style="margin-top:12px; display:${hasAiComment ? 'block' : 'none'}; background:rgba(155,89,182,0.06); border-left:3px solid #9b59b6; padding:12px; border-radius:2px;">
+              <div style="font-family:'Space Mono',monospace;font-size:9px;color:#9b59b6;margin-bottom:6px;text-transform:uppercase;letter-spacing:1px;">AI Evaluation</div>
+              <div id="ai-comment-text-${q.id}" style="font-size:12px;line-height:1.8;color:#3a3028;">
+                ${aiCommentText}
+              </div>
+            </div>
+
+          </div>
+          
+          <details style="margin-top:16px;">
+            <summary style="font-family:'Space Mono',monospace;font-size:11px;color:#9b59b6;cursor:pointer;letter-spacing:1px;">📖 查看参考答案</summary>
+            <div style="margin-top:12px;padding:16px;background:rgba(155,89,182,0.04);border-radius:2px;font-size:13px;line-height:1.9;color:#3a3028;">${q.reference.split('\n').map(l => `<p>${l}</p>`).join('')}</div>
+          </details>
+        </div>
+      </div>
+      `;
+    }).join('') + `
+      <div class="check-row" style="margin-top:8px;">
+        <span style="font-size:12px;color:var(--muted);">预计耗时 30 分钟</span>
+        <button class="check-btn" id="btn-interview" onclick="markInterviewDone()">标记完成 ✓</button>
+      </div>`;
+
+    if (state.done['interview']) {
+      const btn = document.getElementById('btn-interview');
+      if (btn) { btn.classList.add('checked'); btn.textContent = '撤销完成'; btn.onclick = cancelInterviewDone; }
+    }
+  }
+
+  function saveInterviewAnswer(qid, val) {
+    state.reflections[qid] = val;
+    scheduleSync(qid);
+  }
+
+  // ── 数据持久化操作：飞书同步 (Triple Fallback 防分身法) ─────────
+  async function fetchTodayRecord() {
+    try {
+      const path = `/bitable/v1/apps/${FEISHU.baseId}/tables/${FEISHU.tableId}/records`;
+      const dateTs = new Date(todayStr + 'T00:00:00+08:00').getTime();
+      const [y, m, d] = todayStr.split('-');
+      
+      let data = await feishuAPI('GET', path + `?filter=${encodeURIComponent(`CurrentValue.[日期]=DATE(${parseInt(y)},${parseInt(m)},${parseInt(d)})`)}`);
+      if (data.code && data.code !== 0) data = await feishuAPI('GET', path + `?filter=${encodeURIComponent(`CurrentValue.[日期]=${dateTs}`)}`);
+      if (data.code && data.code !== 0) data = await feishuAPI('GET', path + `?page_size=100`);
+
+      if (data.data && data.data.items) {
+        const rec = data.data.items.find(item => item.fields['日期'] === dateTs);
+        if (rec) { todayRecordId = rec.record_id; return rec.fields; }
+      }
+    } catch(e) {}
+    return null;
+  }
+
+  async function syncInterviewAnswer(qid) {
+    if (!todayQuestions) return;
+    const q = todayQuestions.find(x => x.id === qid);
+    if (!q) return;
+    const dateTs = new Date(todayStr + 'T00:00:00+08:00').getTime();
+    
+    // 包含 AI点评 字段
+    const aiCommentData = (state.aiComments && state.aiComments[qid]) ? state.aiComments[qid] : '';
+    
+    const fields = {
+      '日期': dateTs, '题目编号': q.num, '题目类别': q.category, '题目内容': q.title,
+      '答题思路': q.framework, '参考答案': q.reference, '知识点': q.knowledge,
+    };
+    if (state.reflections[qid]) fields['我的答案'] = state.reflections[qid];
+    if (aiCommentData) fields['AI点评'] = aiCommentData;
+
+    const basePath = `/bitable/v1/apps/${FEISHU.baseId}/tables/${FEISHU.interviewTableId}/records`;
+    try {
+      if (!interviewRecordIds[qid]) {
+        try {
+          const [y, m, d] = todayStr.split('-');
+          let data = await feishuAPI('GET', `${basePath}?filter=${encodeURIComponent(`AND(CurrentValue.[日期]=DATE(${parseInt(y)},${parseInt(m)},${parseInt(d)}),CurrentValue.[题目编号]=${q.num})`)}`);
+          if (data.code && data.code !== 0) data = await feishuAPI('GET', `${basePath}?filter=${encodeURIComponent(`AND(CurrentValue.[日期]=${dateTs},CurrentValue.[题目编号]=${q.num})`)}`);
+          if (data.code && data.code !== 0) data = await feishuAPI('GET', `${basePath}?page_size=100`);
+
+          if (data.data && data.data.items) {
+            const rec = data.data.items.find(item => item.fields['日期'] === dateTs && item.fields['题目编号'] === q.num);
+            if (rec) { interviewRecordIds[qid] = rec.record_id; lsave('interviewRecordIds_' + todayStr, interviewRecordIds); }
+          }
+        } catch(e) {}
+      }
+
+      if (interviewRecordIds[qid]) {
+        const res = await feishuAPI('PUT', `${basePath}/${interviewRecordIds[qid]}`, { fields });
+        if (res.code === 1254043 || res.code === 1254040) {
+          interviewRecordIds[qid] = null;
+          const r2 = await feishuAPI('POST', basePath, { fields });
+          if (r2.data && r2.data.record) { interviewRecordIds[qid] = r2.data.record.record_id; lsave('interviewRecordIds_' + todayStr, interviewRecordIds); }
+        }
+      } else {
+        const res = await feishuAPI('POST', basePath, { fields });
+        if (res.data && res.data.record) { interviewRecordIds[qid] = res.data.record.record_id; lsave('interviewRecordIds_' + todayStr, interviewRecordIds); }
+      }
+    } catch(e) {}
+  }
+
+  // ── 周目标数据持久化 ─────────────────────────────────
+  async function syncWeeklyToFeishu(weekNum) {
+    setSyncStatus('syncing', '同步周目标详情...');
+    const keyPrefix = `w${weekNum}_`;
+    const doneIndexes = [1, 2, 3, 4].filter(n => state.weekly[keyPrefix + n]);
+    
+    const details = [1, 2, 3, 4]
+      .filter(n => state.reflections[keyPrefix + n])
+      .map(n => `【目标${n}】\n${state.reflections[keyPrefix + n]}`)
+      .join('\n\n');
+
+    const fields = {
+      '周序号': 'w' + weekNum,
+      '已完成项': doneIndexes.join(',') || '无',
+      '提交详情': details || '暂无内容'
+    };
+    const basePath = `/bitable/v1/apps/${FEISHU.baseId}/tables/${FEISHU.weeklyTableId}/records`;
+
+    try {
+      if (!weeklyRecordIds['w'+weekNum]) {
+        const data = await feishuAPI('GET', `${basePath}?filter=${encodeURIComponent(`CurrentValue.[周序号]="w${weekNum}"`)}`);
+        if (data.data && data.data.items && data.data.items.length > 0) {
+          weeklyRecordIds['w'+weekNum] = data.data.items[0].record_id; lsave('weeklyRecordIds', weeklyRecordIds);
+        }
+      }
+
+      if (weeklyRecordIds['w'+weekNum]) {
+        await feishuAPI('PUT', `${basePath}/${weeklyRecordIds['w'+weekNum]}`, { fields });
+      } else {
+        const res = await feishuAPI('POST', basePath, { fields });
+        if (res.data && res.data.record) { weeklyRecordIds['w'+weekNum] = res.data.record.record_id; lsave('weeklyRecordIds', weeklyRecordIds); }
+      }
+      setSyncStatus('ok', '周目标已更新 ✓');
+    } catch(e) { setSyncStatus('err', '周目标同步失败'); }
+  }
+
+  async function loadWeeklyFromFeishu(weekNum) {
+    const basePath = `/bitable/v1/apps/${FEISHU.baseId}/tables/${FEISHU.weeklyTableId}/records`;
+    try {
+      const data = await feishuAPI('GET', `${basePath}?filter=${encodeURIComponent(`CurrentValue.[周序号]="w${weekNum}"`)}`);
+      if (data.data && data.data.items && data.data.items.length > 0) {
+        const rec = data.data.items[0];
+        weeklyRecordIds['w'+weekNum] = rec.record_id; lsave('weeklyRecordIds', weeklyRecordIds);
+        
+        const doneStr = rec.fields['已完成项'] || '';
+        [1, 2, 3, 4].forEach(n => { state.weekly[`w${weekNum}_${n}`] = doneStr.includes(String(n)); });
+        lsave('state', state);
+        renderState();
+      }
+    } catch(e) {}
+  }
+
+  // ── 基础任务触发同步 ──────────────────────────────────
+  function scheduleSync(interviewQid) {
+    setSyncStatus('syncing', '同步中...');
+    clearTimeout(syncTimeout);
+    syncTimeout = setTimeout(() => {
+      syncToFeishu();
+      if (interviewQid) syncInterviewAnswer(interviewQid);
+    }, 1500);
+  }
+
+  async function syncToFeishu() {
+    try {
+      const doneTasks = Object.keys(state.done).filter(k => state.done[k]);
+      const reflectionText = ['day1','day2','day3'].filter(id => state.reflections[id]).map(id => `[${id}] ${state.reflections[id]}`).join('\n\n');
+      const dateTs = new Date(todayStr + 'T00:00:00+08:00').getTime();
+      const fields = { '日期': dateTs, '任务ID': doneTasks.join(',') || '未打卡', '是否完成': doneTasks.length > 0 };
+      if (reflectionText) fields['思考内容'] = reflectionText;
+
+      const basePath = `/bitable/v1/apps/${FEISHU.baseId}/tables/${FEISHU.tableId}/records`;
+      if (!todayRecordId) await fetchTodayRecord();
+
+      if (todayRecordId) {
+        const res = await feishuAPI('PUT', `${basePath}/${todayRecordId}`, { fields });
+        if (res && (res.code === 1254043 || res.code === 1254040)) {
+          todayRecordId = null; lsave('recordId_' + todayStr, null);
+          const r2 = await feishuAPI('POST', basePath, { fields });
+          if (r2.data && r2.data.record) { todayRecordId = r2.data.record.record_id; lsave('recordId_' + todayStr, todayRecordId); }
+        }
+      } else {
+        const res = await feishuAPI('POST', basePath, { fields });
+        if (res.data && res.data.record) { todayRecordId = res.data.record.record_id; lsave('recordId_' + todayStr, todayRecordId); }
+      }
+      setSyncStatus('ok', '已同步 ✓');
+    } catch(e) { setSyncStatus('err', '同步失败，已本地保存'); }
+  }
+
+  // ── 初始化与渲染 UI ───────────────────────────────────
+  function renderState() {
+    ['day1','day2','day3'].forEach(id => {
+      const statusEl = document.getElementById('status-' + id);
+      const btn = document.getElementById('btn-' + id);
+      if (!statusEl || !btn) return;
+      if (state.done[id]) {
+        statusEl.textContent = '已完成 ✓'; statusEl.className = 'day-status done';
+        btn.classList.add('checked'); btn.textContent = '撤销完成'; btn.onclick = () => cancelDone(id);
+      } else {
+        btn.onclick = () => markDone(id);
+      }
+      if (state.reflections[id]) { const el = document.getElementById('reflect-' + id); if (el) el.value = state.reflections[id]; }
+    });
+
+    const startDt = new Date('2026-03-10');
+    const dayIdx = Math.floor((new Date(todayStr) - startDt) / 86400000);
+    const currentWeek = Math.floor(dayIdx / 7) + 1;
+
+    [1,2,3,4].forEach(n => {
+      const btn = document.getElementById('weekly-btn-' + n);
+      const key = `w${currentWeek}_${n}`;
+      if (btn && state.weekly && state.weekly[key]) {
+        btn.classList.add('done'); btn.textContent = '已完成 ✓';
+        btn.style.borderColor = ''; btn.style.color = '';
+      }
+    });
+    updateProgress();
+    renderStreak();
+  }
+
+  async function loadFromFeishu() {
+    try {
+      const fields = await fetchTodayRecord();
+      if (fields) {
+        lsave('recordId_' + todayStr, todayRecordId);
+        if (fields['任务ID'] && fields['任务ID'] !== '-') { fields['任务ID'].split(',').forEach(id => { if (id) state.done[id.trim()] = true; }); }
+        if (fields['思考内容'] && fields['思考内容'] !== '-') {
+          fields['思考内容'].split('\n\n').forEach(p => { const m = p.match(/^\[(\w+)\]\s*([\s\S]+)/); if (m) state.reflections[m[1]] = m[2].trim(); });
+        }
+        lsave('state', state);
+        setSyncStatus('ok', '云端数据已加载 ✓');
+      } else { setSyncStatus('ok', '今日无记录，开始打卡吧'); }
+      renderState();
+    } catch(e) {}
+  }
+
+  // ── 通用交互逻辑 ──────────────────────────────────────
+  function switchTab(name) {
+    document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+    document.getElementById('tab-' + name).classList.add('active');
+    event.target.classList.add('active');
+  }
+
+  function toggleCard(id) { document.getElementById('body-' + id).classList.toggle('open'); }
+  function saveReflect(id, val) { state.reflections[id] = val; scheduleSync(); }
+
+  function markDone(id) {
+    state.done[id] = true;
+    document.getElementById('status-' + id).textContent = '已完成 ✓'; document.getElementById('status-' + id).className = 'day-status done';
+    const btn = document.getElementById('btn-' + id); btn.classList.add('checked'); btn.textContent = '撤销完成'; btn.onclick = () => cancelDone(id);
+    updateProgress();
+    if (state.done['day1'] && state.done['day2'] && state.done['day3']) { if (!dayDone.includes(todayStr)) { dayDone.push(todayStr); } }
+    scheduleSync();
+  }
+
+  function cancelDone(id) {
+    state.done[id] = false;
+    document.getElementById('status-' + id).textContent = '待完成'; document.getElementById('status-' + id).className = 'day-status pending';
+    const btn = document.getElementById('btn-' + id); btn.classList.remove('checked'); btn.textContent = '标记完成 ✓'; btn.onclick = () => markDone(id);
+    const idx = dayDone.indexOf(todayStr); if (idx > -1) dayDone.splice(idx, 1);
+    updateProgress(); renderStreak(); scheduleSync();
+  }
+
+  function updateProgress() {
+    const learnDone = ['day1','day2','day3'].filter(d => state.done[d]).length;
+    const interviewDone = state.done['interview'] ? 1 : 0;
+    const total = 4;
+    document.getElementById('mainProgress').style.width = ((learnDone + interviewDone) / total * 100) + '%';
+    document.getElementById('progressText').textContent = (learnDone + interviewDone) + ' / ' + total + ' 完成';
+  }
+
+  function renderStreak() {
+    const streakRow = document.getElementById('streakRow'); streakRow.innerHTML = '';
+    for (let i = 20; i >= 0; i--) {
+      const d = new Date(now); d.setDate(d.getDate() - i);
+      const ds = (new Date(d.getTime() - offset)).toISOString().slice(0, 10);
+      const dot = document.createElement('div');
+      dot.className = 'streak-dot' + (ds === todayStr ? ' today' : '') + (dayDone.includes(ds) ? ' done' : '');
+      dot.textContent = d.getDate(); streakRow.appendChild(dot);
+    }
+  }
+
+  async function markInterviewDone() {
+    state.done['interview'] = true;
+    const btn = document.getElementById('btn-interview'); if (btn) { btn.classList.add('checked'); btn.textContent = '撤销完成'; btn.onclick = cancelInterviewDone; }
+    const qs = await getTodayQuestions(); qs.forEach(q => syncInterviewAnswer(q.id));
+    scheduleSync(); updateProgress();
+  }
+
+  async function cancelInterviewDone() {
+    state.done['interview'] = false;
+    const btn = document.getElementById('btn-interview'); if (btn) { btn.classList.remove('checked'); btn.textContent = '标记完成 ✓'; btn.onclick = markInterviewDone; }
+    scheduleSync(); updateProgress();
+  }
+
+  function adjustLayout() {
+    const header = document.querySelector('.header'); const tabNav = document.querySelector('.tab-nav');
+    if (!header || !tabNav) return;
+    document.documentElement.style.setProperty('--header-h', header.offsetHeight + 'px');
+    tabNav.style.top = header.offsetHeight + 'px';
+    document.body.style.paddingTop = (header.offsetHeight + tabNav.offsetHeight) + 'px';
+  }
+  window.addEventListener('resize', adjustLayout);
+
+  // ── 启动 ─────────────────────────────────────────────
+  async function init() {
+    if (!checkGlobalAuth()) return; 
+    
+    renderState();
+    renderInterview();
+    generateDay1WithGemini();
+    generateDay2WithGemini();
+    generateDay3WithGemini();
+    generateWeeklyWithGemini();
+    adjustLayout();
+    
+    const dayOfCycle = ((now.getDay() + 6) % 3) + 1;
+    toggleCard('day' + dayOfCycle);
+    loadFromFeishu();
+  }
+
+  init();
+</script>
+</body>
+</html> -->
