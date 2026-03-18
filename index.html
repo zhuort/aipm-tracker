@@ -157,7 +157,6 @@
   let knowledgeRecordIds = lload('knowledgeRecordIds_' + todayStr, {});
   let learnedConcepts = lload('learnedConcepts', []);
 
-  // ── 缓存获取 ──────────────────────────────
   function getKnowledgeCache() {
     let cached = lload('knowledge_' + todayStr, []);
     return Array.isArray(cached) ? cached : [];
@@ -204,7 +203,9 @@
     const opts = { method, headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' } };
     if (body) opts.body = JSON.stringify(body);
     const res = await fetch(API_BASE + '/feishu' + path, opts);
-    return res.json();
+    const result = await res.json();
+    if (result.code !== 0) console.error('Feishu API Details:', result);
+    return result;
   }
 
   // ── 知识点模块 ──────────────────────────────
@@ -302,7 +303,7 @@
     renderKnowledge(); updateProgress(); scheduleSync(id, 'knowledge');
   }
 
-  // ── 面试题模块 (重构为无限按需生成) ────────────────────────────────────────────────
+  // ── 面试题模块 ────────────────────────────────────────────────
   const Q_CATEGORIES = ['AI底层逻辑与概念', 'AI项目实战落地', '产品核心方法论', '业务结合与提效'];
 
   async function fetchInterviewQuestions(count = 2) {
@@ -401,30 +402,35 @@
     renderInterview(); updateProgress(); scheduleSync(qid, 'interview');
   }
 
-  // ── 周目标 ────────────────────────────────────────────────
+  // ── 周目标 (防崩溃修复) ────────────────────────────────────────────────
   async function generateWeekly() {
     const weekNum = Math.floor((new Date(todayStr) - new Date('2026-03-10')) / 86400000 / 7) + 1;
     const cacheKey = 'weekly_w' + weekNum;
     let weekly = lload(cacheKey, null);
-    if (!weekly) {
+    
+    // 🚨 修复 1：防旧缓存数据结构崩溃。如果缓存里没有 goals，强制清除重头拉取
+    if (!weekly || !weekly.goals || !Array.isArray(weekly.goals)) {
       document.getElementById('weekly-container').innerHTML = '<div style="padding:40px;text-align:center;font-size:12px;color:var(--muted);">正在规划本周突击目标...</div>';
-      weekly = await askGemini(`AI PM转型教练，为第${weekNum}周生成3个学习目标。按JSON返回:{"theme":"..","goals":[{"title":"..","desc":".."}]}`, { theme: 'AI PM 知识突击', goals: [{ title: '打通RAG基础', desc: '搞懂向量检索原理' }] });
+      weekly = await askGemini(`AI PM转型教练，为第${weekNum}周生成3个学习目标。按JSON返回:{"theme":"..","goals":[{"title":"..","desc":".."}]}`, { theme: 'AI PM 知识突击', goals: [{ title: '打通RAG基础', desc: '搞懂向量检索原理' }, { title: '熟悉Agent机制', desc: '拆解一次工具调用流程' }] });
       lsave(cacheKey, weekly);
     }
+    
     const c = document.getElementById('weekly-container');
-    c.innerHTML = weekly.goals.map((g, i) => {
-      const key = `w${weekNum}_${i+1}`; const isDone = state.weekly[key];
-      return `<div class="weekly-block">
-        <div style="font-size:10px;color:var(--gold);margin-bottom:8px;">📌 目标 ${i+1}</div>
-        <div style="font-size:16px;margin-bottom:8px;">${g.title}</div>
-        <div style="font-size:13px;color:rgba(255,255,255,0.7);margin-bottom:16px;line-height:1.6;">${g.desc}</div>
-        <textarea class="weekly-input" placeholder="贴入笔记..." oninput="state.reflections['${key}']=this.value;lsave('state',state);">${state.reflections[key]||''}</textarea>
-        <button class="weekly-check-btn ${isDone?'done':''}" onclick="state.weekly['${key}']=!state.weekly['${key}'];lsave('state',state);this.classList.toggle('done');">标记完成</button>
-      </div>`;
-    }).join('');
+    if (c && weekly && weekly.goals) {
+      c.innerHTML = weekly.goals.map((g, i) => {
+        const key = `w${weekNum}_${i+1}`; const isDone = state.weekly[key];
+        return `<div class="weekly-block">
+          <div style="font-size:10px;color:var(--gold);margin-bottom:8px;">📌 目标 ${i+1}</div>
+          <div style="font-size:16px;margin-bottom:8px;">${g.title}</div>
+          <div style="font-size:13px;color:rgba(255,255,255,0.7);margin-bottom:16px;line-height:1.6;">${g.desc}</div>
+          <textarea class="weekly-input" placeholder="贴入笔记..." oninput="state.reflections['${key}']=this.value;lsave('state',state);">${state.reflections[key]||''}</textarea>
+          <button class="weekly-check-btn ${isDone?'done':''}" onclick="state.weekly['${key}']=!state.weekly['${key}'];lsave('state',state);this.classList.toggle('done');">标记完成</button>
+        </div>`;
+      }).join('');
+    }
   }
 
-  // ── 三表同步路由 ────────────────────────────────────────────────
+  // ── 三表同步路由 (飞书语法强兼容) ────────────────────────────────────────────────
   function saveReflect(id, val) { state.reflections[id] = val; lsave('state', state); scheduleSync(); }
 
   function scheduleSync(itemId, type) {
@@ -466,12 +472,23 @@
     const path = `/bitable/v1/apps/${FEISHU.baseId}/tables/${FEISHU.knowledgeTableId}/records`;
     try {
       if (!knowledgeRecordIds[id]) {
-        const d = await feishuAPI('GET', `${path}?filter=${encodeURIComponent(`AND(CurrentValue.[学习日期]=${todayTimestamp},CurrentValue.[知识点名称]="${data.concept}")`)}`);
+        // 🚨 修复 2：去掉日期的复杂匹配，直接按名称查，防飞书查询语法崩溃，同时去掉了字符串里的引号防止注错
+        const safeConcept = data.concept.replace(/"/g, ''); 
+        const d = await feishuAPI('GET', `${path}?filter=${encodeURIComponent(`CurrentValue.[知识点名称]="${safeConcept}"`)}`);
         if (d.data?.items) knowledgeRecordIds[id] = d.data.items[0].record_id;
       }
-      if (knowledgeRecordIds[id]) await feishuAPI('PUT', `${path}/${knowledgeRecordIds[id]}`, { fields });
-      else { const r = await feishuAPI('POST', path, { fields }); if (r.data?.record) { knowledgeRecordIds[id] = r.data.record.record_id; lsave('knowledgeRecordIds_'+todayStr, knowledgeRecordIds); } }
-    } catch(e) {}
+      let r;
+      if (knowledgeRecordIds[id]) r = await feishuAPI('PUT', `${path}/${knowledgeRecordIds[id]}`, { fields });
+      else r = await feishuAPI('POST', path, { fields });
+      
+      if (r.code && r.code !== 0) {
+        console.error('【知识库同步失败】飞书报错:', r.msg);
+        setSyncStatus('err', '数据格式被飞书拒收');
+      } else {
+        knowledgeRecordIds[id] = r.data.record.record_id; 
+        lsave('knowledgeRecordIds_'+todayStr, knowledgeRecordIds);
+      }
+    } catch(e) { console.error('【知识库同步异常】', e); }
   }
 
   async function syncSingleInterview(qid) {
@@ -483,12 +500,22 @@
     const path = `/bitable/v1/apps/${FEISHU.baseId}/tables/${FEISHU.interviewTableId}/records`;
     try {
       if (!interviewRecordIds[qid]) {
-        const d = await feishuAPI('GET', `${path}?filter=${encodeURIComponent(`AND(CurrentValue.[生成日期]=${todayTimestamp},CurrentValue.[题目内容]="${q.title}")`)}`);
+        const safeTitle = q.title.replace(/"/g, '');
+        const d = await feishuAPI('GET', `${path}?filter=${encodeURIComponent(`CurrentValue.[题目内容]="${safeTitle}"`)}`);
         if (d.data?.items) interviewRecordIds[qid] = d.data.items[0].record_id;
       }
-      if (interviewRecordIds[qid]) await feishuAPI('PUT', `${path}/${interviewRecordIds[qid]}`, { fields });
-      else { const r = await feishuAPI('POST', path, { fields }); if (r.data?.record) { interviewRecordIds[qid] = r.data.record.record_id; lsave('interviewRecordIds_'+todayStr, interviewRecordIds); } }
-    } catch(e) {}
+      let r;
+      if (interviewRecordIds[qid]) r = await feishuAPI('PUT', `${path}/${interviewRecordIds[qid]}`, { fields });
+      else r = await feishuAPI('POST', path, { fields });
+      
+      if (r.code && r.code !== 0) {
+        console.error('【面经同步失败】飞书报错:', r.msg);
+        setSyncStatus('err', '面经同步被拒收');
+      } else {
+        interviewRecordIds[qid] = r.data.record.record_id; 
+        lsave('interviewRecordIds_'+todayStr, interviewRecordIds);
+      }
+    } catch(e) { console.error('【面经库同步异常】', e); }
   }
 
   // ── 进度与交互 ─────────────────────────────────────────────
@@ -519,8 +546,8 @@
     if (!checkGlobalAuth()) return;
     adjustLayout(); 
     initKnowledge(); 
-    initInterview(); // 真正启动面经按需生成！
-    generateWeekly(); // 启动周目标！
+    initInterview(); // 启动面经按需生成
+    generateWeekly(); // 启动周目标渲染
     updateProgress();
   }
 
