@@ -94,9 +94,7 @@
     <div class="section-hd-line"></div>
     <span style="font-family:'Space Mono',monospace;font-size:10px;color:var(--muted);">Feynman 学习法</span>
   </div>
-  <div id="knowledge-container">
-    <div style="padding:40px;text-align:center;font-size:12px;color:var(--muted);">正在翻阅 AI 词典...</div>
-  </div>
+  <div id="knowledge-container"></div>
 </div>
 
 <div class="tab-panel content" id="tab-interview">
@@ -117,14 +115,14 @@
 </div>
 
 <script>
-  // ── 核心配置 (三张表的终极路由) ──────────────────────
+  // ── 核心配置 ──────────────────────
   const API_BASE = 'https://aipm-api.rutingzhuo05.workers.dev';
   const FEISHU = { 
     appId: 'cli_a9248a4017f8dcb3', 
     baseId: 'KiBzbaG9patb0isx4oGcUbPWnOe', 
-    tableId: 'tblX1j2AaKiDalFp',             // 任务打卡表
-    knowledgeTableId: 'tblQMY5pYyvLnpI8',    // AI 知识库表
-    interviewTableId: 'tblrik3BihWl2tIt',    // 专属面经题库
+    tableId: 'tblX1j2AaKiDalFp',             
+    knowledgeTableId: 'tblQMY5pYyvLnpI8',    
+    interviewTableId: 'tblrik3BihWl2tIt',    
     weeklyTableId: 'tblYzYS7D7vEqNdf' 
   };
 
@@ -152,7 +150,6 @@
     el.style.color = colors[status] || '#8a7d6e'; el.textContent = msg;
   }
 
-  // 状态与Record ID存储
   let state = lload('state', { done: {}, reflections: {}, weekly: {}, aiComments: {} });
   let token = null; let syncTimeout = null;
   let todayRecordId = lload('recordId_' + todayStr, null);
@@ -160,10 +157,14 @@
   let knowledgeRecordIds = lload('knowledgeRecordIds_' + todayStr, {});
   let learnedConcepts = lload('learnedConcepts', []);
 
+  // ── 缓存获取 ──────────────────────────────
   function getKnowledgeCache() {
     let cached = lload('knowledge_' + todayStr, []);
-    if (cached && !Array.isArray(cached)) { cached = [cached]; lsave('knowledge_' + todayStr, cached); }
-    return cached || [];
+    return Array.isArray(cached) ? cached : [];
+  }
+  function getInterviewCache() {
+    let cached = lload('questions_' + todayStr, []);
+    return Array.isArray(cached) ? cached : [];
   }
 
   // ── API 封装 ───────────────────
@@ -208,9 +209,8 @@
 
   // ── 知识点模块 ──────────────────────────────
   async function fetchOneKnowledge() {
-    const usedStr = learnedConcepts.length > 0 ? `\n避开已学过的概念：${learnedConcepts.slice(-20).join(',')}` : '';
-    const prompt = `你是一位AI产品总监。请挑1个底层概念培训AI产品经理候选人。${usedStr}
-请按JSON返回：{"concept": "中英文名称", "eli5": "通俗解释(金融打比方)", "product_value": "具体解决什么问题", "interview_hook": "面试怎么包装加分"}`;
+    const usedStr = learnedConcepts.length > 0 ? `\n避开已学过：${learnedConcepts.slice(-20).join(',')}` : '';
+    const prompt = `你是一位AI产品总监。请挑1个底层概念培训AI产品经理候选人。${usedStr}\n请按JSON返回：{"concept": "名称", "eli5": "通俗解释", "product_value": "具体价值", "interview_hook": "面试包装"}`;
     const fallback = { concept: "向量数据库 (Vector DB)", eli5: "按意思查字典", product_value: "支持模糊搜索", interview_hook: "强调业务场景" };
     
     const data = await askGemini(prompt, fallback);
@@ -220,19 +220,24 @@
 
   async function initKnowledge() {
     let arr = getKnowledgeCache();
-    if (arr.length === 0) { const data = await fetchOneKnowledge(); arr.push(data); lsave('knowledge_' + todayStr, arr); }
-    renderKnowledge(arr);
+    if (arr.length === 0) { 
+      document.getElementById('knowledge-container').innerHTML = '<div style="padding:40px;text-align:center;font-size:12px;color:var(--muted);">正在翻阅 AI 词典...</div>';
+      const data = await fetchOneKnowledge(); 
+      arr.push(data); lsave('knowledge_' + todayStr, arr); 
+    }
+    renderKnowledge();
   }
 
   async function addMoreKnowledge() {
     const btn = document.getElementById('btn-add-knowledge');
-    btn.textContent = '⏳ 正在拼命翻阅 AI 词典...'; btn.disabled = true;
+    if(btn) { btn.textContent = '⏳ 正在拼命翻阅 AI 词典...'; btn.disabled = true; }
     const data = await fetchOneKnowledge();
     let arr = getKnowledgeCache(); arr.push(data); lsave('knowledge_' + todayStr, arr);
-    renderKnowledge(arr);
+    renderKnowledge();
   }
 
-  function renderKnowledge(arr) {
+  function renderKnowledge() {
+    const arr = getKnowledgeCache();
     const container = document.getElementById('knowledge-container');
     container.innerHTML = arr.map((data, i) => {
       const id = 'k' + i;
@@ -251,23 +256,18 @@
             <div class="knowledge-p"><strong>💼 核心产品价值：</strong><br/>${data.product_value}</div>
             <div class="knowledge-p"><strong>🎯 面试怎么聊：</strong><br/>${data.interview_hook}</div>
           </div>
-          
           <div class="reflection-block">
             <div style="display:flex; justify-content:space-between; margin-bottom:10px;">
               <span style="font-family:'Space Mono',monospace;font-size:10px;color:var(--accent);letter-spacing:1px;text-transform:uppercase;">✍️ 费曼总结输出</span>
               <button class="check-btn" style="padding:4px 12px; font-size:10px; border-color:var(--accent); color:var(--accent);" id="btn-ai-${id}" onclick="getKnowledgeEvaluation('${id}', '${data.concept}')">🤖 获取点评</button>
             </div>
-            <div style="font-size:12px;color:var(--muted);margin-top:4px;">请用一句话写下你对这个概念的理解：</div>
             <textarea class="reflection-input" id="reflect-${id}" placeholder="我的理解是..." oninput="saveReflect('${id}', this.value)">${state.reflections[id]||''}</textarea>
-            
             <div id="ai-comment-${id}" style="margin-top:12px; display:${aiCommentText ? 'block' : 'none'}; background:rgba(200,75,47,0.06); border-left:3px solid var(--accent); padding:12px;">
               <div style="font-size:9px;color:var(--accent);margin-bottom:6px;">AI EVALUATION</div>
               <div id="ai-comment-text-${id}" style="font-size:12px;line-height:1.8;color:var(--ink);">${aiCommentText}</div>
             </div>
           </div>
-          
           <div class="check-row">
-            <span style="font-size:12px;color:var(--muted);">预计耗时 15 分钟</span>
             <button class="check-btn ${isDone ? 'checked' : ''}" id="btn-done-${id}" onclick="toggleKnowledgeDone('${id}')">${isDone ? '撤销完成' : '标记完成 ✓'}</button>
           </div>
         </div>
@@ -291,8 +291,7 @@
     commentText.innerHTML = aiComment.replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/\n/g, '<br>');
     btn.textContent = '重新获取点评'; btn.disabled = false;
     
-    // 获取点评后自动标记完成并同步单条
-    if (!state.done[id]) { state.done[id] = true; updateProgress(); renderKnowledge(getKnowledgeCache()); }
+    if (!state.done[id]) { state.done[id] = true; updateProgress(); renderKnowledge(); }
     scheduleSync(id, 'knowledge');
   }
 
@@ -300,31 +299,50 @@
     const val = document.getElementById('reflect-' + id).value.trim();
     if (!state.done[id] && val.length < 5) { alert("请至少写一句总结哦！"); return; }
     state.done[id] = !state.done[id];
-    renderKnowledge(getKnowledgeCache()); updateProgress(); scheduleSync(id, 'knowledge');
+    renderKnowledge(); updateProgress(); scheduleSync(id, 'knowledge');
   }
 
-  // ── 面试题模块 ────────────────────────────────────────────────
+  // ── 面试题模块 (重构为无限按需生成) ────────────────────────────────────────────────
   const Q_CATEGORIES = ['AI底层逻辑与概念', 'AI项目实战落地', '产品核心方法论', '业务结合与提效'];
-  let usedTitles = lload('usedTitles', []);
-  let todayQuestions = lload('questions_' + todayStr, null);
 
-  async function getTodayQuestions() {
-    if (todayQuestions) return todayQuestions;
+  async function fetchInterviewQuestions(count = 2) {
     const category = Q_CATEGORIES[Math.floor(Date.now() / 86400000) % Q_CATEGORIES.length];
-    const usedStr = usedTitles.length > 0 ? `\n避开已出题：\n${usedTitles.slice(-20).join('\n')}` : '';
-    const prompt = `资深AI产品经理面试官，为转型AI PM候选人出2道题。类别：${category} ${usedStr}\n请按JSON返回：\n[{"title": "...", "framework": "...", "knowledge": "..."}]`;
-    const fallback = [{ title: '谈谈对Agent的理解？', framework: '① 定义 ② 案例', knowledge: 'Agent' }];
-    
-    const qs = await askGemini(prompt, fallback);
-    todayQuestions = qs.map((q, i) => ({ id: 'q'+(i+1), num: i+1, category, ...q }));
-    lsave('questions_' + todayStr, todayQuestions);
-    return todayQuestions;
+    const cached = getInterviewCache();
+    const usedStr = cached.length > 0 ? `\n避开已出题：\n${cached.map(x=>x.title).slice(-10).join('\n')}` : '';
+    const prompt = `你是一个严厉的AI产品总监。请为转型AI PM的候选人出 ${count} 道面试真题。类别：${category} ${usedStr}\n请严格按JSON数组返回，格式：\n[{"title": "...", "framework": "...", "knowledge": "..."}]`;
+    const fallback = count === 1
+      ? [{ title: '如果在上线前一天发现大模型偶发严重幻觉，你怎么办？', framework: '① 兜底策略降级 ② 评估影响范围 ③ 紧急拦截规则', knowledge: '幻觉风控与应急' }]
+      : [{ title: '谈谈对Agent核心组件的理解？', framework: '① 规划(Planning) ② 记忆(Memory) ③ 工具(Tools)', knowledge: 'Agent' }, { title: 'RAG和微调(SFT)在业务上如何选型？', framework: '① 数据时效性 ② 成本 ③ 领域专业度', knowledge: '技术选型' }];
+
+    let qs = await askGemini(prompt, fallback);
+    if (!Array.isArray(qs)) qs = fallback;
+    return qs.map(q => ({ id: 'q' + Math.random().toString(36).substr(2, 6), category, ...q }));
+  }
+
+  async function initInterview() {
+    let arr = getInterviewCache();
+    if (arr.length === 0) {
+      document.getElementById('interview-container').innerHTML = '<div style="padding:40px;text-align:center;font-size:12px;color:var(--muted);">正在邀请大厂面试官入场出题...</div>';
+      arr = await fetchInterviewQuestions(2);
+      lsave('questions_' + todayStr, arr);
+    }
+    renderInterview();
+  }
+
+  async function addMoreInterview() {
+    const btn = document.getElementById('btn-add-interview');
+    if (btn) { btn.textContent = '⏳ 正在向面试官申请新题目...'; btn.disabled = true; }
+    const newQs = await fetchInterviewQuestions(1);
+    let arr = getInterviewCache();
+    arr = arr.concat(newQs);
+    lsave('questions_' + todayStr, arr);
+    renderInterview();
   }
 
   async function getAIEvaluation(qid) {
     const userAnswer = state.reflections[qid] || '';
     if (userAnswer.trim().length < 10) { alert('写点答案再让AI点评吧！'); return; }
-    const q = todayQuestions.find(x => x.id === qid);
+    const q = getInterviewCache().find(x => x.id === qid);
     const btn = document.getElementById('btn-ai-' + qid);
     const commentBox = document.getElementById('ai-comment-' + qid); const commentText = document.getElementById('ai-comment-text-' + qid);
     
@@ -338,24 +356,22 @@
     commentText.innerHTML = aiComment.replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/\n/g, '<br>');
     btn.textContent = '重新获取点评'; btn.disabled = false;
     
-    // 自动标记完成并同步面经
     if (!state.done[qid]) { state.done[qid] = true; updateProgress(); renderInterview(); }
     scheduleSync(qid, 'interview');
   }
 
-  async function renderInterview() {
+  function renderInterview() {
+    const arr = getInterviewCache();
     const container = document.getElementById('interview-container');
-    container.innerHTML = '<div style="padding:40px;text-align:center;font-size:12px;color:var(--muted);">正在出题...</div>';
-    const qs = await getTodayQuestions();
-    container.innerHTML = qs.map((q, i) => {
+    container.innerHTML = arr.map((q, i) => {
       const aiCommentText = (state.aiComments && state.aiComments[q.id]) ? state.aiComments[q.id].replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/\n/g, '<br>') : '';
-      const isDone = state.done[q.id];
+      const isDone = state.done[q.id]; const isOpen = i === arr.length - 1;
       return `
       <div class="day-card">
         <div class="day-header" onclick="this.nextElementSibling.classList.toggle('open')">
           <div class="day-label"><span class="day-num" style="background:rgba(155,89,182,0.08);color:#9b59b6;">题目 ${i+1}</span><span class="day-title">${q.title}</span></div>
         </div>
-        <div class="day-body ${i===0?'open':''}">
+        <div class="day-body ${isOpen?'open':''}">
           <div class="keypoints"><div class="keypoints-title">📌 答题框架</div>${q.framework.split('\n').map(f => `<div class="keypoint"><div class="keypoint-dot"></div><div class="keypoint-text">${f.replace(/^[①②③④]/,'').trim()}</div></div>`).join('')}</div>
           <div class="reflection-block" style="background:rgba(155,89,182,0.03);border-color:rgba(155,89,182,0.2);">
             <div style="display:flex; justify-content:space-between; margin-bottom:10px;">
@@ -373,7 +389,11 @@
           </div>
         </div>
       </div>`;
-    }).join('');
+    }).join('') + `
+      <div style="text-align:center; margin: 30px 0;">
+        <button id="btn-add-interview" class="check-btn" style="border-color: #9b59b6; color: #9b59b6; padding: 12px 32px; font-size:13px;" onclick="addMoreInterview()">➕ 觉得不够虐？再来一道面试题！</button>
+      </div>
+    `;
   }
 
   function toggleInterviewDone(qid) {
@@ -381,7 +401,30 @@
     renderInterview(); updateProgress(); scheduleSync(qid, 'interview');
   }
 
-  // ── 三表路由同步逻辑 ────────────────────────────────────────────────
+  // ── 周目标 ────────────────────────────────────────────────
+  async function generateWeekly() {
+    const weekNum = Math.floor((new Date(todayStr) - new Date('2026-03-10')) / 86400000 / 7) + 1;
+    const cacheKey = 'weekly_w' + weekNum;
+    let weekly = lload(cacheKey, null);
+    if (!weekly) {
+      document.getElementById('weekly-container').innerHTML = '<div style="padding:40px;text-align:center;font-size:12px;color:var(--muted);">正在规划本周突击目标...</div>';
+      weekly = await askGemini(`AI PM转型教练，为第${weekNum}周生成3个学习目标。按JSON返回:{"theme":"..","goals":[{"title":"..","desc":".."}]}`, { theme: 'AI PM 知识突击', goals: [{ title: '打通RAG基础', desc: '搞懂向量检索原理' }] });
+      lsave(cacheKey, weekly);
+    }
+    const c = document.getElementById('weekly-container');
+    c.innerHTML = weekly.goals.map((g, i) => {
+      const key = `w${weekNum}_${i+1}`; const isDone = state.weekly[key];
+      return `<div class="weekly-block">
+        <div style="font-size:10px;color:var(--gold);margin-bottom:8px;">📌 目标 ${i+1}</div>
+        <div style="font-size:16px;margin-bottom:8px;">${g.title}</div>
+        <div style="font-size:13px;color:rgba(255,255,255,0.7);margin-bottom:16px;line-height:1.6;">${g.desc}</div>
+        <textarea class="weekly-input" placeholder="贴入笔记..." oninput="state.reflections['${key}']=this.value;lsave('state',state);">${state.reflections[key]||''}</textarea>
+        <button class="weekly-check-btn ${isDone?'done':''}" onclick="state.weekly['${key}']=!state.weekly['${key}'];lsave('state',state);this.classList.toggle('done');">标记完成</button>
+      </div>`;
+    }).join('');
+  }
+
+  // ── 三表同步路由 ────────────────────────────────────────────────
   function saveReflect(id, val) { state.reflections[id] = val; lsave('state', state); scheduleSync(); }
 
   function scheduleSync(itemId, type) {
@@ -394,10 +437,9 @@
     }, 1500);
   }
 
-  // 路由 1：同步到打卡主表 (只计算数量)
   async function syncMainTracker() {
     let kCount = 0; getKnowledgeCache().forEach((_, i) => { if (state.done['k'+i]) kCount++; });
-    let qCount = 0; if (todayQuestions) { todayQuestions.forEach(q => { if (state.done[q.id]) qCount++; }); }
+    let qCount = 0; getInterviewCache().forEach(q => { if (state.done[q.id]) qCount++; });
     
     const fields = { '日期': todayTimestamp, '今日学习概念数': kCount, '今日答题数': qCount };
     const path = `/bitable/v1/apps/${FEISHU.baseId}/tables/${FEISHU.tableId}/records`;
@@ -413,18 +455,11 @@
     } catch(e) { setSyncStatus('err', '主表同步失败'); }
   }
 
-  // 路由 2：独立同步单条知识点到 AI 知识库
   async function syncSingleKnowledge(id) {
     const idx = parseInt(id.replace('k', ''));
     const data = getKnowledgeCache()[idx]; if (!data) return;
 
-    const fields = {
-      '知识点名称': data.concept,
-      '学习日期': todayTimestamp,
-      '通俗解释': data.eli5,
-      '产品价值': data.product_value,
-      '面试怎么聊': data.interview_hook
-    };
+    const fields = { '知识点名称': data.concept, '学习日期': todayTimestamp, '通俗解释': data.eli5, '产品价值': data.product_value, '面试怎么聊': data.interview_hook };
     if (state.reflections[id]) fields['我的费曼总结'] = state.reflections[id];
     if (state.aiComments && state.aiComments[id]) fields['导师点评'] = state.aiComments[id];
 
@@ -439,16 +474,9 @@
     } catch(e) {}
   }
 
-  // 路由 3：独立同步单条面试题到 面经题库
   async function syncSingleInterview(qid) {
-    const q = todayQuestions?.find(x => x.id === qid); if (!q) return;
-    const fields = {
-      '题目内容': q.title,
-      '生成日期': todayTimestamp,
-      '所属类别': q.category,
-      '考察知识点': q.knowledge,
-      '答题框架': q.framework
-    };
+    const q = getInterviewCache().find(x => x.id === qid); if (!q) return;
+    const fields = { '题目内容': q.title, '生成日期': todayTimestamp, '所属类别': q.category, '考察知识点': q.knowledge, '答题框架': q.framework };
     if (state.reflections[qid]) fields['我的答案'] = state.reflections[qid];
     if (state.aiComments && state.aiComments[qid]) fields['严厉点评'] = state.aiComments[qid];
 
@@ -463,11 +491,10 @@
     } catch(e) {}
   }
 
-  // ── 进度与辅助 ─────────────────────────────────────────────
+  // ── 进度与交互 ─────────────────────────────────────────────
   function updateProgress() {
-    let kCount = 0; getKnowledgeCache().forEach((_, i) => { if (state.done['k'+i]) kCount++; });
-    let qCount = 0; if (todayQuestions) { todayQuestions.forEach(q => { if (state.done[q.id]) qCount++; }); }
-    
+    let kCount = 0; getKnowledgeCache().forEach((data, i) => { if (state.done['k'+i]) kCount++; });
+    let qCount = 0; getInterviewCache().forEach(q => { if (state.done[q.id]) qCount++; });
     let total = kCount + qCount;
     document.getElementById('mainProgress').style.width = (total > 0 ? '100%' : '0%');
     document.getElementById('progressText').textContent = `今日斩获：${kCount} 概念 · ${qCount} 面经`;
@@ -490,8 +517,11 @@
 
   async function init() {
     if (!checkGlobalAuth()) return;
-    adjustLayout(); updateProgress();
-    initKnowledge(); renderInterview();
+    adjustLayout(); 
+    initKnowledge(); 
+    initInterview(); // 真正启动面经按需生成！
+    generateWeekly(); // 启动周目标！
+    updateProgress();
   }
 
   init();
