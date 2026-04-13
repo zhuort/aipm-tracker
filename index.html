@@ -260,17 +260,34 @@
   }
 
   function renderKnowledge() {
-    const arr = getKnowledgeCache();
-    const container = document.getElementById('knowledge-container');
-    container.innerHTML = arr.map((data, i) => {
+  const arr = getKnowledgeCache() || [];
+  const container = document.getElementById('knowledge-container');
+  
+  // 【关键修复】过滤掉无效数据，只渲染真正有内容的概念
+  const validArr = arr.filter(data => data && data.concept && data.concept !== "暂无数据");
+
+  if (validArr.length === 0) {
+    container.innerHTML = `
+      <div style="padding:80px 20px; text-align:center;">
+        <div style="font-size:24px; margin-bottom:16px;">🔍</div>
+        <div style="color:var(--muted); font-size:13px;">当前没有可显示的知识点</div>
+        <button class="check-btn" style="margin-top:20px;" onclick="addMoreKnowledge()">尝试重新加载</button>
+      </div>`;
+  } else {
+    container.innerHTML = validArr.map((data, i) => {
       const id = 'k' + i;
       const aiCommentText = (state.aiComments && state.aiComments[id]) ? state.aiComments[id].replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/\n/g, '<br>') : '';
-      const isDone = state.done[id]; const isOpen = i === arr.length - 1;
+      const isDone = state.done[id]; 
+      const isOpen = i === validArr.length - 1; // 默认展开最后一个
 
       return `
       <div class="day-card">
         <div class="day-header" onclick="this.nextElementSibling.classList.toggle('open')">
-          <div class="day-label"><span class="day-num">核心概念 ${i+1}</span><span class="day-title">${data.concept}</span></div>
+          <div class="day-label">
+            <span class="day-num">核心概念 ${i+1}</span>
+            <span style="background:var(--accent); color:white; padding:2px 6px; border-radius:4px; font-size:10px; margin:0 8px;">${data.domain || '通用'}</span>
+            <span class="day-title">${data.concept}</span>
+          </div>
         </div>
         <div class="day-body ${isOpen ? 'open' : ''}">
           <div class="knowledge-block">
@@ -282,11 +299,10 @@
           <div class="reflection-block">
             <div style="display:flex; justify-content:space-between; margin-bottom:10px;">
               <span style="font-family:'Space Mono',monospace;font-size:10px;color:var(--accent);letter-spacing:1px;text-transform:uppercase;">✍️ 费曼总结输出</span>
-              <button class="check-btn" style="padding:4px 12px; font-size:10px; border-color:var(--accent); color:var(--accent);" id="btn-ai-${id}" onclick="getKnowledgeEvaluation('${id}', '${data.concept}')">🤖 获取点评</button>
+              <button class="check-btn" style="padding:4px 12px; font-size:10px;" id="btn-ai-${id}" onclick="getKnowledgeEvaluation('${id}', '${data.concept}')">🤖 获取点评</button>
             </div>
             <textarea class="reflection-input" id="reflect-${id}" placeholder="我的理解是..." oninput="saveReflect('${id}', this.value)">${state.reflections[id]||''}</textarea>
             <div id="ai-comment-${id}" style="margin-top:12px; display:${aiCommentText ? 'block' : 'none'}; background:rgba(200,75,47,0.06); border-left:3px solid var(--accent); padding:12px;">
-              <div style="font-size:9px;color:var(--accent);margin-bottom:6px;">AI EVALUATION</div>
               <div id="ai-comment-text-${id}" style="font-size:12px;line-height:1.8;color:var(--ink);">${aiCommentText}</div>
             </div>
           </div>
@@ -295,9 +311,12 @@
           </div>
         </div>
       </div>`;
-    }).join('') + `<div style="text-align:center; margin: 30px 0;"><button id="btn-add-knowledge" class="check-btn" style="border-color: #2f64c8; color: #2f64c8; padding: 12px 32px; font-size:13px;" onclick="addMoreKnowledge()">➕ 觉得没吃饱？再学一个概念！</button></div>`;
+    }).join('');
   }
-
+  
+  // 添加底部的按钮
+  container.innerHTML += `<div style="text-align:center; margin: 30px 0;"><button id="btn-add-knowledge" class="check-btn" style="border-color: #2f64c8; color: #2f64c8; padding: 12px 32px; font-size:13px;" onclick="addMoreKnowledge()">➕ 觉得没吃饱？再学一个概念！</button></div>`;
+}
   async function getKnowledgeEvaluation(id, concept) {
     const userAnswer = state.reflections[id] || '';
     if (userAnswer.trim().length < 5) { alert('请先写下总结再获取点评哦！'); return; }
