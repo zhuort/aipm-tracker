@@ -210,28 +210,33 @@
 
   // ── 知识点模块 ──────────────────────────────
   async function fetchOneKnowledge() {
-    // 1. 定义知识领域，确保覆盖面广
-    const domains = ['模型原理与局限', 'RAG与向量数据库', 'Agent架构设计', '数据策略与标注', 'AI成本与性能平衡', '合规与安全'];
-    const randomDomain = domains[Math.floor(Math.random() * domains.length)];
+  const domains = ['模型原理', 'RAG与向量数据库', 'Agent架构', '数据与标注', 'AI成本与性能', '合规与安全'];
+  const randomDomain = domains[Math.floor(Math.random() * domains.length)];
+  const usedStr = (typeof learnedConcepts !== 'undefined' && learnedConcepts.length > 0) ? `\n避开：${learnedConcepts.slice(-20).join(',')}` : '';
 
-    const usedStr = learnedConcepts.length > 0 ? `\n避开已学过：${learnedConcepts.slice(-30).join(',')}` : '';
+  const prompt = `你是一位AI产品总监。请从【${randomDomain}】领域挑1个底层概念。${usedStr}\n请严格按JSON返回：{"concept": "名称", "eli5": "通俗解释", "product_value": "具体价值", "interview_hook": "面试包装", "domain": "${randomDomain}"}`;
 
-    // 2. 增强提示词，强调“PM 视角”和“决策权衡”
-    const prompt = `你是一位顶级 AI 产品总监。请从【${randomDomain}】领域中挑选一个高频且具挑战性的底层概念。
-    要求：
-    - 避开过于基础的定义（如什么是AI）。
-    - 侧重于 PM 在实际项目中需要做出的“权衡 (Trade-off)”或“决策”。
-    - 结合银行、智能客服或企业级应用场景。
+  const fallback = { concept: "暂无数据", eli5: "API暂时无法连接", product_value: "-", interview_hook: "-", domain: "Error" };
+
+  try {
+    const data = await askGemini(prompt, fallback);
     
-    请按JSON返回：
-    {
-      "concept": "名称",
-      "eli5": "用三句话给老板讲清楚本质",
-      "product_value": "PM在项目中如何利用它做决策或优化体验",
-      "interview_hook": "面试时如何体现深度（提供一个具体的案例或反直觉的洞察）",
-      "domain": "${randomDomain}"
-    }`;
+    // 【关键修复】校验 data 是否有效且包含必要字段
+    if (!data || !data.concept || data.concept === "暂无数据") {
+      console.error("AI 返回数据无效:", data);
+      return null; // 返回 null，让调用方知道失败了
+    }
+    
+    if (typeof learnedConcepts !== 'undefined' && !learnedConcepts.includes(data.concept)) {
+      learnedConcepts.push(data.concept);
+      lsave('learnedConcepts', learnedConcepts);
+    }
+    return data;
+  } catch (e) {
+    console.error("fetchOneKnowledge Error:", e);
+    return null;
   }
+}
 
 
 
