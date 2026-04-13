@@ -210,14 +210,28 @@
 
   // ── 知识点模块 ──────────────────────────────
   async function fetchOneKnowledge() {
-    const usedStr = learnedConcepts.length > 0 ? `\n避开已学过：${learnedConcepts.slice(-20).join(',')}` : '';
-    const prompt = `你是一位AI产品总监。请挑1个底层概念培训AI产品经理候选人。${usedStr}\n请按JSON返回：{"concept": "名称", "eli5": "通俗解释", "product_value": "具体价值", "interview_hook": "面试包装"}`;
-    const fallback = { concept: "向量数据库 (Vector DB)", eli5: "按意思查字典", product_value: "支持模糊搜索", interview_hook: "强调业务场景" };
+    // 1. 定义知识领域，确保覆盖面广
+    const domains = ['模型原理与局限', 'RAG与向量数据库', 'Agent架构设计', '数据策略与标注', 'AI成本与性能平衡', '合规与安全'];
+    const randomDomain = domains[Math.floor(Math.random() * domains.length)];
+
+    const usedStr = learnedConcepts.length > 0 ? `\n避开已学过：${learnedConcepts.slice(-30).join(',')}` : '';
+
+    // 2. 增强提示词，强调“PM 视角”和“决策权衡”
+    const prompt = `你是一位顶级 AI 产品总监。请从【${randomDomain}】领域中挑选一个高频且具挑战性的底层概念。
+    要求：
+    - 避开过于基础的定义（如什么是AI）。
+    - 侧重于 PM 在实际项目中需要做出的“权衡 (Trade-off)”或“决策”。
+    - 结合银行、智能客服或企业级应用场景。
     
-    const data = await askGemini(prompt, fallback);
-    if (!learnedConcepts.includes(data.concept)) { learnedConcepts.push(data.concept); lsave('learnedConcepts', learnedConcepts); }
-    return data;
-  }
+    请按JSON返回：
+    {
+      "concept": "名称",
+      "eli5": "用三句话给老板讲清楚本质",
+      "product_value": "PM在项目中如何利用它做决策或优化体验",
+      "interview_hook": "面试时如何体现深度（提供一个具体的案例或反直觉的洞察）",
+      "domain": "${randomDomain}"
+    }`;
+
 
   async function initKnowledge() {
     let arr = getKnowledgeCache();
