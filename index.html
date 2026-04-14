@@ -169,40 +169,32 @@
   // ── API 封装 ───────────────────
   async function askGemini(prompt, fallbackData) {
   try {
-    const strictPrompt = prompt + "\n【系统强制指令】：请严格输出合法 JSON。不允许真实换行符，需换行用 '\\n'。禁止 Markdown 标记。";
-    
-    // 🚨 这里的 v1 路径要确保没有空格
-    const res = await fetch(API_BASE + '/gemini/v1/models/gemini-1.5-flash:generateContent', {
-      method: 'POST', 
+    const url = `${API_BASE}/gemini/v1/models/gemini-1.5-flash:generateContent`;
+
+    const res = await fetch(url, {
+      method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ 
-        contents: [{ parts: [{ text: strictPrompt }] }], 
-        generationConfig: { 
-          temperature: 0.7, 
-          max_output_tokens: 4000,        // 🚨 修正：使用下划线命名
-          response_mime_type: "application/json" // 🚨 修正：使用下划线命名
-        } 
+      body: JSON.stringify({
+        contents: [{
+          parts: [{ text: prompt + " \n请直接输出JSON字符串，不要带Markdown代码块标签。" }]
+        }]
+        // 🚨 彻底删掉 generationConfig，避开所有命名规范陷阱
       })
     });
 
     const data = await res.json();
-
-    // 如果报错，直接在控制台输出 Google 给的具体原因，方便我们定位
     if (!res.ok) {
-      console.error("Gemini 返回了错误:", data.error ? data.error.message : data);
+      console.error("这次如果没有配置还报错，那就是路径或Key的问题:", data);
       return fallbackData;
     }
 
-    if (!data.candidates) return fallbackData; 
-    
-    const text = data.candidates[0].content.parts.map(p => p.text).join('');
-    // 清洗可能存在的 Markdown 格式
+    const text = data.candidates[0].content.parts[0].text;
+    // 这里的正则清洗会处理掉 AI 默认返回的 ```json 标签
     const cleanJson = text.replace(/```json/gi, '').replace(/```/g, '').trim();
     return JSON.parse(cleanJson);
-
-  } catch(e) { 
-    console.error("解析 JSON 失败:", e);
-    return fallbackData; 
+  } catch (e) {
+    console.error("解析失败:", e);
+    return fallbackData;
   }
 }
 
