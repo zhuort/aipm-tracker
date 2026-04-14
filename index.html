@@ -202,7 +202,7 @@
     }
   }
 
-  async function askGeminiText(, fallbackText) {
+  async function askGeminiText(prompt, fallbackText) {
   try {
     // 🚨 检查点 1：确保 API_BASE 结尾没有多余斜杠，模型名没有空格
     const url = `${API_BASE}/gemini/v1/models/gemini-1.5-flash:generateContent`;
