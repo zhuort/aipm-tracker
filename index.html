@@ -219,7 +219,7 @@
   const fallback = { concept: "暂无数据", eli5: "API暂时无法连接", product_value: "-", interview_hook: "-", domain: "Error" };
 
   try {
-    const data = await ask(prompt, fallback);
+    const data = await askGemini(prompt, fallback);
     
     // 【关键修复】校验 data 是否有效且包含必要字段
     if (!data || !data.concept || data.concept === "暂无数据") {
