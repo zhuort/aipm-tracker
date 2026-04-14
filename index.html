@@ -636,9 +636,11 @@
     adjustLayout(); 
     initKnowledge(); 
     setTimeout(() => {
-    initInterview(); // 延迟 500ms 加载面经
-    generateWeekly(); // 启动周目标渲染
+      initInterview(); // 延迟 1000ms 加载面经
   }, 1000);
+    setTimeout(() => {
+      generateWeekly(); // 启动周目标渲染
+  }, 2000);
     updateProgress();
   }
 
