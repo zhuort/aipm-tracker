@@ -177,32 +177,27 @@
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         contents: [{
-          parts: [{ text: prompt }] // 🚨 确保这里只传 prompt 字符串
-        }],
-        generationConfig: {
-          temperature: 0.7,
-          // 统一使用 Google 最喜欢的下划线格式
-          max_output_tokens: 1000,
-          response_mime_type: "application/json" 
-        }
+          parts: [{ text: prompt + "\n请严格返回JSON格式，不要带Markdown标签。" }]
+        }]
+        // 🚨 彻底删掉整个 generationConfig 对象，彻底解决 400 报错
       })
     });
 
     const data = await res.json();
     
     if (!res.ok) {
-      // 💡 这里的打印非常重要：请展开这个 data 看 error.message
-      console.error("Google 拒收理由:", data.error?.message || data);
+      console.error("Google 报错详细:", data);
       return fallbackData;
     }
 
-    // 🚨 关键修复：处理 AI 可能返回的 Markdown 标签
+    // 🚨 核心逻辑：既然不强制 JSON 模式，AI 可能会返回 ```json ... ```
+    // 我们用正则强行把这层皮剥掉
     let text = data.candidates[0].content.parts[0].text;
-    text = text.replace(/```json/g, "").replace(/```/g, "").trim();
+    const cleanJson = text.replace(/```json/gi, '').replace(/```/g, '').trim();
     
-    return JSON.parse(text);
+    return JSON.parse(cleanJson);
   } catch (e) {
-    console.error("解析 JSON 失败，AI 返回可能不是合法格式:", e);
+    console.error("JSON 解析失败:", e);
     return fallbackData;
   }
 }
