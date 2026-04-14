@@ -211,7 +211,7 @@
       method: 'POST', 
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ 
-        contents: [{ parts: [{ text:  }] }], 
+        contents: [{ parts: [{ text: prompt }] }], 
         generationConfig: { 
           temperature: 0.7 
           // 这里不需要 responseMimeType，因为是纯文本对话
