@@ -255,33 +255,33 @@
 
   // ── 知识点模块 ──────────────────────────────
   async function fetchOneKnowledge() {
-  const domains = ['模型原理', 'RAG与向量数据库', 'Agent架构', '数据与标注', 'AI成本与性能', '合规与安全'];
-  const randomDomain = domains[Math.floor(Math.random() * domains.length)];
-  const usedStr = (typeof learnedConcepts !== 'undefined' && learnedConcepts.length > 0) ? `\n避开：${learnedConcepts.slice(-20).join(',')}` : '';
-
-  const prompt = `你是一位AI产品总监。请从【${randomDomain}】领域挑1个底层概念。${usedStr}\n请严格按JSON返回：{"concept": "名称", "eli5": "通俗解释", "product_value": "具体价值", "interview_hook": "面试包装", "domain": "${randomDomain}"}`;
-
-  const fallback = { concept: "暂无数据", eli5: "API暂时无法连接", product_value: "-", interview_hook: "-", domain: "Error" };
-
-  try {
-    const data = await askGemini(prompt, fallback);
-    
-    // 【关键修复】校验 data 是否有效且包含必要字段
-    if (!data || !data.concept || data.concept === "暂无数据") {
-      console.error("AI 返回数据无效:", data);
-      return null; // 返回 null，让调用方知道失败了
+    const domains = ['模型原理', 'RAG与向量数据库', 'Agent架构', '数据与标注', 'AI成本与性能', '合规与安全'];
+    const randomDomain = domains[Math.floor(Math.random() * domains.length)];
+    const usedStr = (typeof learnedConcepts !== 'undefined' && learnedConcepts.length > 0) ? `\n避开：${learnedConcepts.slice(-20).join(',')}` : '';
+  
+    const prompt = `你是一位AI产品总监。请从【${randomDomain}】领域挑1个底层概念。${usedStr}\n请严格按JSON返回：{"concept": "名称", "eli5": "通俗解释", "product_value": "具体价值", "interview_hook": "面试包装", "domain": "${randomDomain}"}`;
+  
+    const fallback = { concept: "暂无数据", eli5: "API暂时无法连接", product_value: "-", interview_hook: "-", domain: "Error" };
+  
+    try {
+      const data = await askGemini(prompt, fallback);
+      
+      // 【关键修复】校验 data 是否有效且包含必要字段
+      if (!data || !data.concept || data.concept === "暂无数据") {
+        console.error("AI 返回数据无效:", data);
+        return null; // 返回 null，让调用方知道失败了
+      }
+      
+      if (typeof learnedConcepts !== 'undefined' && !learnedConcepts.includes(data.concept)) {
+        learnedConcepts.push(data.concept);
+        lsave('learnedConcepts', learnedConcepts);
+      }
+      return data;
+    } catch (e) {
+      console.error("fetchOneKnowledge Error:", e);
+      return null;
     }
-    
-    if (typeof learnedConcepts !== 'undefined' && !learnedConcepts.includes(data.concept)) {
-      learnedConcepts.push(data.concept);
-      lsave('learnedConcepts', learnedConcepts);
-    }
-    return data;
-  } catch (e) {
-    console.error("fetchOneKnowledge Error:", e);
-    return null;
   }
-}
 
 
 
@@ -638,8 +638,10 @@
     if (!checkGlobalAuth()) return;
     adjustLayout(); 
     initKnowledge(); 
-    initInterview(); // 启动面经按需生成
+    setTimeout(() => {
+    initInterview(); // 延迟 500ms 加载面经
     generateWeekly(); // 启动周目标渲染
+  }, 1000);
     updateProgress();
   }
 
