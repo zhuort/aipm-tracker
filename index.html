@@ -170,7 +170,7 @@
   async function askGemini(prompt, fallbackData) {
     try {
       const strictPrompt = prompt + "\n【系统强制指令】：请严格输出合法 JSON。不允许真实换行符，需换行用 '\\n'。禁止 Markdown 标记。";
-      const res = await fetch(API_BASE + '/gemini', {
+      const res = await fetch(API_BASE + '/gemini/v1/models/gemini-2.5-flash:generateContent', {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ contents: [{ parts: [{ text: strictPrompt }] }], generationConfig: { temperature: 0.7, maxOutputTokens: 4000, responseMimeType: "application/json" } })
       });
@@ -183,7 +183,7 @@
 
   async function askGeminiText(prompt, fallbackText) {
     try {
-      const res = await fetch(API_BASE + '/gemini', {
+      const res = await fetch(API_BASE + '/gemini/v1/models/gemini-2.5-flash:generateContent', {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }], generationConfig: { temperature: 0.7 } })
       });
@@ -219,7 +219,7 @@
   const fallback = { concept: "暂无数据", eli5: "API暂时无法连接", product_value: "-", interview_hook: "-", domain: "Error" };
 
   try {
-    const data = await askGemini(prompt, fallback);
+    const data = await ask(prompt, fallback);
     
     // 【关键修复】校验 data 是否有效且包含必要字段
     if (!data || !data.concept || data.concept === "暂无数据") {
