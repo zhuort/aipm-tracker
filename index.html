@@ -583,32 +583,29 @@
     } catch(e) { console.error('【知识库同步异常】', e); }
   }
   
-  async function syncSingleInterview(qid) {
-    const q = getInterviewCache().find(x => x.id === qid); if (!q) return;
-    const fields = { '题目内容': q.title, '生成日期': todayTimestamp, '所属类别': q.category, '考察知识点': q.knowledge, '答题框架': q.framework };
-    if (state.reflections[qid]) fields['我的答案'] = state.reflections[qid];
-    if (state.aiComments && state.aiComments[qid]) fields['严厉点评'] = state.aiComments[qid];
-
-    const path = `/bitable/v1/apps/${FEISHU.baseId}/tables/${FEISHU.interviewTableId}/records`;
-    try {
-      if (!interviewRecordIds[qid]) {
-        const safeTitle = q.title.replace(/"/g, '');
-        const d = await feishuAPI('GET', `${path}?filter=${encodeURIComponent(`CurrentValue.[题目内容]="${safeTitle}"`)}`);
-        if (d.data?.items) interviewRecordIds[qid] = d.data.items[0].record_id;
-      }
-      let r;
-      if (interviewRecordIds[qid]) r = await feishuAPI('PUT', `${path}/${interviewRecordIds[qid]}`, { fields });
-      else r = await feishuAPI('POST', path, { fields });
-      
-      if (r.code && r.code !== 0) {
-        console.error('【面经同步失败】飞书报错:', r.msg);
-        setSyncStatus('err', '面经同步被拒收');
-      } else {
-        interviewRecordIds[qid] = r.data.record.record_id; 
-        lsave('interviewRecordIds_'+todayStr, interviewRecordIds);
-      }
-    } catch(e) { console.error('【面经库同步异常】', e); }
+  async function syncSingleInterview(record) {
+  try {
+    const res = await fetch(`${API_BASE}/feishu/bitable/v1/apps/${APP_TOKEN}/tables/${TABLE_ID}/records`, {
+      method: 'POST',
+      body: JSON.stringify({ fields: record })
+    });
+    
+    const result = await res.json();
+    
+    if (res.ok && result.code === 0) {
+      // 只有真正成功才更新 UI
+      showToast("同步成功！");
+      return true;
+    } else {
+      console.error("飞书同步失败:", result.msg);
+      showToast("同步失败：" + (result.message || result.msg));
+      return false;
+    }
+  } catch (e) {
+    console.error("网络异常:", e);
+    return false;
   }
+}
 
   // ── 进度与交互 ─────────────────────────────────────────────
   function updateProgress() {
