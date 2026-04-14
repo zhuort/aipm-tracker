@@ -167,38 +167,42 @@
   }
 
   // ── API 封装 ───────────────────
+  // --- 关键修正：确保结构扁平 ---
   async function askGemini(prompt, fallbackData) {
-  try {
-    const url = `${API_BASE}/gemini/v1/models/gemini-1.5-flash:generateContent`;
+    try {
+      const url = `${API_BASE}/gemini/v1/models/gemini-1.5-flash:generateContent`;
 
-    const res = await fetch(url, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        contents: [{
-          parts: [{ text: prompt + " \n请直接输出JSON字符串，不要带Markdown代码块标签。" }]
-        }]
-        // 🚨 彻底删掉 generationConfig，避开所有命名规范陷阱
-      })
-    });
+      // 🚨 检查点 1：确保传入的是字符串，并清理可能存在的首尾多余引号
+      const cleanPrompt = typeof prompt === 'string' ? prompt.trim() : JSON.stringify(prompt);
 
-    const data = await res.json();
-    if (!res.ok) {
-      console.error("这次如果没有配置还报错，那就是路径或Key的问题:", data);
+      const res = await fetch(url, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          contents: [{
+            parts: [{ text: cleanPrompt }] // 🚨 确保这里只有这一层结构
+          }]
+        })
+      });
+
+      const data = await res.json();
+      
+      // 诊断：如果返回 400，把结果打出来
+      if (!res.ok) {
+        console.error("Google 拒收了 Payload:", data);
+        return fallbackData;
+      }
+
+      const text = data.candidates[0].content.parts[0].text;
+      // 清洗 Markdown 并解析
+      return JSON.parse(text.replace(/```json/gi, '').replace(/```/g, '').trim());
+    } catch (e) {
+      console.error("askGemini 执行出错:", e);
       return fallbackData;
     }
-
-    const text = data.candidates[0].content.parts[0].text;
-    // 这里的正则清洗会处理掉 AI 默认返回的 ```json 标签
-    const cleanJson = text.replace(/```json/gi, '').replace(/```/g, '').trim();
-    return JSON.parse(cleanJson);
-  } catch (e) {
-    console.error("解析失败:", e);
-    return fallbackData;
   }
-}
 
-  async function askGeminiText(prompt, fallbackText) {
+  async function askGeminiText(, fallbackText) {
   try {
     // 🚨 检查点 1：确保 API_BASE 结尾没有多余斜杠，模型名没有空格
     const url = `${API_BASE}/gemini/v1/models/gemini-1.5-flash:generateContent`;
@@ -207,7 +211,7 @@
       method: 'POST', 
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ 
-        contents: [{ parts: [{ text: prompt }] }], 
+        contents: [{ parts: [{ text:  }] }], 
         generationConfig: { 
           temperature: 0.7 
           // 这里不需要 responseMimeType，因为是纯文本对话
