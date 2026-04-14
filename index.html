@@ -168,31 +168,79 @@
 
   // ── API 封装 ───────────────────
   async function askGemini(prompt, fallbackData) {
-    try {
-      const strictPrompt = prompt + "\n【系统强制指令】：请严格输出合法 JSON。不允许真实换行符，需换行用 '\\n'。禁止 Markdown 标记。";
-      const res = await fetch(API_BASE + '/gemini/v1/models/gemini-2.5-flash:generateContent', {
-        method: 'POST', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ contents: [{ parts: [{ text: strictPrompt }] }], generationConfig: { temperature: 0.7, maxOutputTokens: 4000, response_mime_type: "application/json" } })
-      });
-      const data = await res.json();
-      if (!res.ok || data.error || !data.candidates) return fallbackData; 
-      const text = data.candidates[0].content.parts.map(p => p.text).join('');
-      return JSON.parse(text.replace(/```json/gi, '').replace(/```/g, '').trim());
-    } catch(e) { return fallbackData; }
+  try {
+    const strictPrompt = prompt + "\n【系统强制指令】：请严格输出合法 JSON。不允许真实换行符，需换行用 '\\n'。禁止 Markdown 标记。";
+    
+    // 🚨 这里的 v1 路径要确保没有空格
+    const res = await fetch(API_BASE + '/gemini/v1/models/gemini-1.5-flash:generateContent', {
+      method: 'POST', 
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ 
+        contents: [{ parts: [{ text: strictPrompt }] }], 
+        generationConfig: { 
+          temperature: 0.7, 
+          max_output_tokens: 4000,        // 🚨 修正：使用下划线命名
+          response_mime_type: "application/json" // 🚨 修正：使用下划线命名
+        } 
+      })
+    });
+
+    const data = await res.json();
+
+    // 如果报错，直接在控制台输出 Google 给的具体原因，方便我们定位
+    if (!res.ok) {
+      console.error("Gemini 返回了错误:", data.error ? data.error.message : data);
+      return fallbackData;
+    }
+
+    if (!data.candidates) return fallbackData; 
+    
+    const text = data.candidates[0].content.parts.map(p => p.text).join('');
+    // 清洗可能存在的 Markdown 格式
+    const cleanJson = text.replace(/```json/gi, '').replace(/```/g, '').trim();
+    return JSON.parse(cleanJson);
+
+  } catch(e) { 
+    console.error("解析 JSON 失败:", e);
+    return fallbackData; 
   }
+}
 
   async function askGeminiText(prompt, fallbackText) {
-    try {
-      const res = await fetch(API_BASE + '/gemini/v1/models/gemini-2.5-flash:generateContent', {
-        method: 'POST', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }], generationConfig: { temperature: 0.7 } })
-      });
-      const data = await res.json();
-      if (!res.ok || data.error) return `⚠️ AI 暂时无法点评。`;
-      if (data.candidates && data.candidates[0].content) return data.candidates[0].content.parts.map(p => p.text).join('').trim();
-      return fallbackText;
-    } catch(e) { return fallbackText; }
+  try {
+    // 🚨 检查点 1：确保 API_BASE 结尾没有多余斜杠，模型名没有空格
+    const url = `${API_BASE}/gemini/v1/models/gemini-1.5-flash:generateContent`;
+
+    const res = await fetch(url, {
+      method: 'POST', 
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ 
+        contents: [{ parts: [{ text: prompt }] }], 
+        generationConfig: { 
+          temperature: 0.7 
+          // 这里不需要 response_mime_type，因为是纯文本对话
+        } 
+      })
+    });
+
+    const data = await res.json();
+
+    // 🚨 检查点 2：如果报错，把错误信息打出来，别只返回 fallback
+    if (!res.ok || data.error) {
+      console.error("Gemini Text API Error:", data.error || data);
+      return `⚠️ AI 暂时无法点评: ${data.error?.message || '未知错误'}`;
+    }
+
+    if (data.candidates && data.candidates[0].content) {
+      return data.candidates[0].content.parts.map(p => p.text).join('').trim();
+    }
+    
+    return fallbackText;
+  } catch(e) { 
+    console.error("askGeminiText 运行崩溃:", e);
+    return fallbackText; 
   }
+}
 
   async function feishuAPI(method, path, body) {
     if (!token) {
