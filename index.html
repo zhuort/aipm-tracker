@@ -170,7 +170,7 @@
   // --- 关键修正：确保结构扁平 ---
   async function askGemini(prompt, fallbackData) {
   try {
-    const url = `${API_BASE}/gemini/v1/models/gemini-1.5-flash:generateContent`;
+    const url = `${API_BASE}/gemini/v1/models/gemini-2.5-flash:generateContent`;
 
     const res = await fetch(url, {
       method: 'POST',
@@ -206,7 +206,7 @@
   async function askGeminiText(prompt, fallbackText) {
   try {
     // 🚨 检查点 1：确保 API_BASE 结尾没有多余斜杠，模型名没有空格
-    const url = `${API_BASE}/gemini/v1/models/gemini-1.5-flash:generateContent`;
+    const url = `${API_BASE}/gemini/v1/models/gemini-2.5-flash:generateContent`;
 
     const res = await fetch(url, {
       method: 'POST', 
