@@ -172,7 +172,7 @@
       const strictPrompt = prompt + "\n【系统强制指令】：请严格输出合法 JSON。不允许真实换行符，需换行用 '\\n'。禁止 Markdown 标记。";
       const res = await fetch(API_BASE + '/gemini/v1/models/gemini-2.5-flash:generateContent', {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ contents: [{ parts: [{ text: strictPrompt }] }], generationConfig: { temperature: 0.7, maxOutputTokens: 4000, responseMimeType: "application/json" } })
+        body: JSON.stringify({ contents: [{ parts: [{ text: strictPrompt }] }], generationConfig: { temperature: 0.7, maxOutputTokens: 4000, response_mime_type: "application/json" } })
       });
       const data = await res.json();
       if (!res.ok || data.error || !data.candidates) return fallbackData; 
