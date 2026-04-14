@@ -169,39 +169,45 @@
   // ── API 封装 ───────────────────
   // --- 关键修正：确保结构扁平 ---
   async function askGemini(prompt, fallbackData) {
-    try {
-      const url = `${API_BASE}/gemini/v1/models/gemini-1.5-flash:generateContent`;
+  try {
+    const url = `${API_BASE}/gemini/v1/models/gemini-1.5-flash:generateContent`;
 
-      // 🚨 检查点 1：确保传入的是字符串，并清理可能存在的首尾多余引号
-      const cleanPrompt = typeof prompt === 'string' ? prompt.trim() : JSON.stringify(prompt);
+    const res = await fetch(url, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        contents: [{
+          parts: [{ text: prompt }] // 🚨 确保这里只传 prompt 字符串
+        }],
+        generationConfig: {
+          temperature: 0.7,
+          // 统一使用 Google 最喜欢的下划线格式
+          max_output_tokens: 1000,
+          response_mime_type: "application/json" 
+        }
+      })
+    });
 
-      const res = await fetch(url, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          contents: [{
-            parts: [{ text: cleanPrompt }] // 🚨 确保这里只有这一层结构
-          }]
-        })
-      });
-
-      const data = await res.json();
-      
-      // 诊断：如果返回 400，把结果打出来
-      if (!res.ok) {
-        console.error("Google 拒收了 Payload:", data);
-        return fallbackData;
-      }
-
-      const text = data.candidates[0].content.parts[0].text;
-      // 清洗 Markdown 并解析
-      return JSON.parse(text.replace(/```json/gi, '').replace(/```/g, '').trim());
-    } catch (e) {
-      console.error("askGemini 执行出错:", e);
+    const data = await res.json();
+    
+    if (!res.ok) {
+      // 💡 这里的打印非常重要：请展开这个 data 看 error.message
+      console.error("Google 拒收理由:", data.error?.message || data);
       return fallbackData;
     }
-  }
 
+    // 🚨 关键修复：处理 AI 可能返回的 Markdown 标签
+    let text = data.candidates[0].content.parts[0].text;
+    text = text.replace(/```json/g, "").replace(/```/g, "").trim();
+    
+    return JSON.parse(text);
+  } catch (e) {
+    console.error("解析 JSON 失败，AI 返回可能不是合法格式:", e);
+    return fallbackData;
+  }
+}
+
+  
   async function askGeminiText(prompt, fallbackText) {
   try {
     // 🚨 检查点 1：确保 API_BASE 结尾没有多余斜杠，模型名没有空格
