@@ -179,8 +179,8 @@
         contents: [{ parts: [{ text: strictPrompt }] }], 
         generationConfig: { 
           temperature: 0.7, 
-          max_output_tokens: 4000,        // 🚨 修正：使用下划线命名
-          response_mime_type: "application/json" // 🚨 修正：使用下划线命名
+          maxOutputTokens: 4000,        // 🚨 修正：使用下划线命名
+          responseMimeType: "application/json" // 🚨 修正：使用下划线命名
         } 
       })
     });
@@ -218,7 +218,7 @@
         contents: [{ parts: [{ text: prompt }] }], 
         generationConfig: { 
           temperature: 0.7 
-          // 这里不需要 response_mime_type，因为是纯文本对话
+          // 这里不需要 responseMimeType，因为是纯文本对话
         } 
       })
     });
