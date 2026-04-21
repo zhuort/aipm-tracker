@@ -584,49 +584,56 @@
   }
   
   async function syncSingleInterview(qid) {
-  // 1. 从缓存获取数据
-  const q = getInterviewCache().find(x => x.id === qid); 
-  if (!q) return;
-  
-  // 🚨 修复 1：确保 fields 里的结构和你的飞书表头完全一致
-  // 注意：如果你的表头带表情，记得加上，例如 '🎯 题目内容'
-  const recordFields = { 
-    '题目内容': q.title, 
-    '生成日期': todayTimestamp, 
-    '所属类别': q.category, 
-    '考察知识点': q.knowledge, 
-    '答题框架': q.framework 
-  };
-  
-  // 补充用户输入和 AI 点评
-  if (state.reflections[qid]) recordFields['我的答案'] = state.reflections[qid];
-  if (state.aiComments && state.aiComments[qid]) recordFields['严厉点评'] = state.aiComments[qid];
+    const q = getInterviewCache().find(x => x.id === qid); if (!q) return;
+    
+    // 🚨 这里的 Key 必须与飞书“每日面经”表的表头完全一致（包括 Emoji 和空格）
+    const fields = { 
+      '题目内容': q.title, 
+      '生成日期': todayTimestamp, 
+      '所属类别': q.category, 
+      '考察知识点': q.knowledge, 
+      '答题框架': q.framework,
+      // 🚨 新增：记录重答次数（如果没有数据，默认为 1 或 0）
+      '重答次数': q.retryCount || 1 
+    };
 
-  const path = `/feishu/bitable/v1/apps/${FEISHU.baseId}/tables/${FEISHU.interviewTableId}/records`;
-  
-  try {
-    const res = await fetch(API_BASE + path, {
-      method: 'POST',
-      headers: { 
-        'Content-Type': 'application/json',
-        'Authorization': 'Bearer ' + token // 确保 token 已获取
-      },
-      // 🚨 修复的核心：body 里的 fields 必须对应刚才定义的 recordFields 对象
-      body: JSON.stringify({ fields: recordFields })
-    });
+    // 动态添加用户输入和 AI 点评
+    if (state.reflections[qid]) fields['✍️ 我的答案'] = state.reflections[qid];
+    if (state.aiComments && state.aiComments[qid]) fields['🤖 严厉点评'] = state.aiComments[qid];
 
-    const result = await res.json();
-    if (result.code === 0) {
-      console.log('✅ 飞书写入成功');
-      // 🚨 修复 2：用简单的 alert 代替未定义的 showToast
-      alert('同步到飞书成功！'); 
-    } else {
-      console.error('❌ 飞书拒收：', result.msg);
+    const path = `/bitable/v1/apps/${FEISHU.baseId}/tables/${FEISHU.interviewTableId}/records`;
+    
+    try {
+      // 1. 查重逻辑
+      if (!interviewRecordIds[qid]) {
+        const safeTitle = q.title.replace(/"/g, ''); 
+        const d = await feishuAPI('GET', `${path}?filter=${encodeURIComponent(`CurrentValue.[题目内容]="${safeTitle}"`)}`);
+        if (d.data?.items && d.data.items.length > 0) {
+          interviewRecordIds[qid] = d.data.items[0].record_id;
+        }
+      }
+
+      let r;
+      // 2. 执行写入
+      if (interviewRecordIds[qid]) {
+        r = await feishuAPI('PUT', `${path}/${interviewRecordIds[qid]}`, { fields });
+      } else {
+        r = await feishuAPI('POST', path, { fields });
+      }
+      
+      // 3. 结果反馈
+      if (r.code && r.code !== 0) {
+        console.error('【面经库同步失败】报错详情:', r.msg);
+        setSyncStatus('err', '面经拒收：' + r.msg);
+      } else {
+        interviewRecordIds[qid] = r.data.record.record_id; 
+        lsave('interviewRecordIds_' + todayStr, interviewRecordIds);
+        console.log('✅ 面经录入成功');
+      }
+    } catch(e) { 
+      console.error('【面经库同步异常】', e); 
     }
-  } catch(e) {
-    console.error('❌ 网络异常：', e);
   }
-}
 
   // ── 进度与交互 ─────────────────────────────────────────────
   function updateProgress() {
