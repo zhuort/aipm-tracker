@@ -585,7 +585,9 @@
   
   async function syncSingleInterview(record) {
   try {
-    const res = await fetch(`${API_BASE}/feishu/bitable/v1/apps/${FEISHU.baseId}/tables/${FEISHU.baseId}/records`, {
+    // 🚨 茹婷，直接用这行，别用变量嵌套了！
+    const res = await fetch(API_BASE + '/feishu/bitable/v1/apps/KiBzbaG9patb0isx4oGcUbPWnOe/tables/' + FEISHU.interviewTableId + '/records', {
+    //const res = await fetch(`${API_BASE}/feishu/bitable/v1/apps/${FEISHU.baseId}/tables/${FEISHU.baseId}/records`, {
       method: 'POST',
       body: JSON.stringify({ fields: record })
     });
