@@ -583,29 +583,48 @@
     } catch(e) { console.error('【知识库同步异常】', e); }
   }
   
-  async function syncSingleInterview(record) {
+  async function syncSingleInterview(qid) {
+  // 1. 从缓存获取数据
+  const q = getInterviewCache().find(x => x.id === qid); 
+  if (!q) return;
+  
+  // 🚨 修复 1：确保 fields 里的结构和你的飞书表头完全一致
+  // 注意：如果你的表头带表情，记得加上，例如 '🎯 题目内容'
+  const recordFields = { 
+    '题目内容': q.title, 
+    '生成日期': todayTimestamp, 
+    '所属类别': q.category, 
+    '考察知识点': q.knowledge, 
+    '答题框架': q.framework 
+  };
+  
+  // 补充用户输入和 AI 点评
+  if (state.reflections[qid]) recordFields['我的答案'] = state.reflections[qid];
+  if (state.aiComments && state.aiComments[qid]) recordFields['严厉点评'] = state.aiComments[qid];
+
+  const path = `/feishu/bitable/v1/apps/${FEISHU.baseId}/tables/${FEISHU.interviewTableId}/records`;
+  
   try {
-    // 🚨 茹婷，直接用这行，别用变量嵌套了！
-    const res = await fetch(API_BASE + '/feishu/bitable/v1/apps/KiBzbaG9patb0isx4oGcUbPWnOe/tables/' + FEISHU.interviewTableId + '/records', {
-    //const res = await fetch(`${API_BASE}/feishu/bitable/v1/apps/${FEISHU.baseId}/tables/${FEISHU.baseId}/records`, {
+    const res = await fetch(API_BASE + path, {
       method: 'POST',
-      body: JSON.stringify({ fields: record })
+      headers: { 
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer ' + token // 确保 token 已获取
+      },
+      // 🚨 修复的核心：body 里的 fields 必须对应刚才定义的 recordFields 对象
+      body: JSON.stringify({ fields: recordFields })
     });
-    
+
     const result = await res.json();
-    
-    if (res.ok && result.code === 0) {
-      // 只有真正成功才更新 UI
-      showToast("同步成功！");
-      return true;
+    if (result.code === 0) {
+      console.log('✅ 飞书写入成功');
+      // 🚨 修复 2：用简单的 alert 代替未定义的 showToast
+      alert('同步到飞书成功！'); 
     } else {
-      console.error("飞书同步失败:", result.msg);
-      showToast("同步失败：" + (result.message || result.msg));
-      return false;
+      console.error('❌ 飞书拒收：', result.msg);
     }
-  } catch (e) {
-    console.error("网络异常:", e);
-    return false;
+  } catch(e) {
+    console.error('❌ 网络异常：', e);
   }
 }
 
