@@ -661,6 +661,22 @@
 
   async function init() {
     if (!checkGlobalAuth()) return;
+    const lastAccessDate = lload('last_access_date', '');
+    if (lastAccessDate !== todayStr) {
+      console.log('🌅 新的一天开始，正在清理昨日答题痕迹...');
+      
+      // 1. 清理心得和 AI 点评状态（只保留空对象）
+      state = { done: {}, reflections: {}, weekly: {}, aiComments: {} };
+      lsave('state', state);
+      
+      // 2. 清理旧的记录 ID（确保今天生成的是新记录）
+      lsave('interviewRecordIds_' + todayStr, {});
+      lsave('knowledgeRecordIds_' + todayStr, {});
+      
+      // 3. 更新最后访问日期
+      lsave('last_access_date', todayStr);
+    }
+    
     adjustLayout(); 
     initKnowledge(); 
     setTimeout(() => {
