@@ -498,12 +498,19 @@
       document.getElementById('weekly-container').innerHTML = '<div style="padding:40px;text-align:center;font-size:12px;color:var(--muted);">正在规划本周深度实战目标...</div>';
       // 🚨 增强 Prompt：要求 AI 提供更具“产品实战深度”的目标
       //const prompt = `你是一位AI产品总监。请为第${weekNum}周制定3个深度学习目标。要求：每个目标必须包含“核心理论”+“业务应用场景”+“面试避坑点”。按JSON返回:{"theme":"..","goals":[{"title":"..","desc":".."}]}`;
-      const prompt = `你是一位资深的AI产品总监。请为第${weekNum}周制定3个深度学习目标。
-        要求：
-        1. 严禁出“了解xx、掌握xx”这种宽泛的题目。
-        2. 每个目标必须是一个【实战课题】，包含：[核心原理]+[典型业务场景（如金融、客服、法律）]+[PM必须关注的工程限制/成本指标]。
-        3. 语气要专业且具有挑战性。
-        按JSON返回:{"theme":"..","goals":[{"title":"..","desc":".."}]}`;
+      const myContext = "候选人背景：传统银行PM转型AI PM。核心项目经历：1. 智能客服助手（利用大模型提升话术采纳率与话术生成效率）；2. 知识库自动化同步（Obsidian/飞书/知识库集成）；3. 金融业务合规与数据安全。";
+  
+      const prompt = `你是一位专注【金融科技/智能客服】领域的 AI 产品总监。请结合以下背景，为第${weekNum}周制定 3 个深度实战目标：
+      
+        ${myContext}
+        
+        出题要求：
+        1. 必须紧扣【银行/客服/知识工程】场景，严禁出现供应链、电商、娱乐等无关领域。
+        2. 目标需具备【可面试性】：模拟大厂面试官对该候选人简历项目可能提出的“深挖挑战”。
+        3. 结构：[实战课题名称] + [基于简历项目的进阶任务（需包含技术选型或业务瓶颈解决）]。
+        
+        按JSON返回:{"theme":"金融客服AI专家进阶","goals":[{"title":"..","desc":".."}]}`;
+      
       weekly = await askGemini(prompt, { theme: 'AI PM 实战进阶', goals: [{ title: 'RAG架构深度拆解', desc: '不仅要懂检索，还要说清如何解决向量库的噪声问题及重排（Rerank）在金融场景的必要性。' }, { title: 'Agent 多工具调用编排', desc: '梳理一套能够自主调用查询接口、计算工具并输出报告的 Agent 逻辑，重点在于判断循环（Loop）的终点。' }] });
       lsave(cacheKey, weekly);
     }
