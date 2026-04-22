@@ -497,7 +497,13 @@
     if (!weekly || !weekly.goals || !Array.isArray(weekly.goals)) {
       document.getElementById('weekly-container').innerHTML = '<div style="padding:40px;text-align:center;font-size:12px;color:var(--muted);">正在规划本周深度实战目标...</div>';
       // 🚨 增强 Prompt：要求 AI 提供更具“产品实战深度”的目标
-      const prompt = `你是一位AI产品总监。请为第${weekNum}周制定3个深度学习目标。要求：每个目标必须包含“核心理论”+“业务应用场景”+“面试避坑点”。按JSON返回:{"theme":"..","goals":[{"title":"..","desc":".."}]}`;
+      //const prompt = `你是一位AI产品总监。请为第${weekNum}周制定3个深度学习目标。要求：每个目标必须包含“核心理论”+“业务应用场景”+“面试避坑点”。按JSON返回:{"theme":"..","goals":[{"title":"..","desc":".."}]}`;
+      const prompt = `你是一位资深的AI产品总监。请为第${weekNum}周制定3个深度学习目标。
+        要求：
+        1. 严禁出“了解xx、掌握xx”这种宽泛的题目。
+        2. 每个目标必须是一个【实战课题】，包含：[核心原理]+[典型业务场景（如金融、客服、法律）]+[PM必须关注的工程限制/成本指标]。
+        3. 语气要专业且具有挑战性。
+        按JSON返回:{"theme":"..","goals":[{"title":"..","desc":".."}]}`;
       weekly = await askGemini(prompt, { theme: 'AI PM 实战进阶', goals: [{ title: 'RAG架构深度拆解', desc: '不仅要懂检索，还要说清如何解决向量库的噪声问题及重排（Rerank）在金融场景的必要性。' }, { title: 'Agent 多工具调用编排', desc: '梳理一套能够自主调用查询接口、计算工具并输出报告的 Agent 逻辑，重点在于判断循环（Loop）的终点。' }] });
       lsave(cacheKey, weekly);
     }
