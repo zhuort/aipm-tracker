@@ -494,41 +494,61 @@
     const cacheKey = 'weekly_w' + weekNum;
     let weekly = lload(cacheKey, null);
     
-    // 🚨 修复 1：防旧缓存数据结构崩溃。如果缓存里没有 goals，强制清除重头拉取
     if (!weekly || !weekly.goals || !Array.isArray(weekly.goals)) {
-      document.getElementById('weekly-container').innerHTML = '<div style="padding:40px;text-align:center;font-size:12px;color:var(--muted);">正在规划本周突击目标...</div>';
-      weekly = await askGemini(`AI PM转型教练，为第${weekNum}周生成3个学习目标。按JSON返回:{"theme":"..","goals":[{"title":"..","desc":".."}]}`, { theme: 'AI PM 知识突击', goals: [{ title: '打通RAG基础', desc: '搞懂向量检索原理' }, { title: '熟悉Agent机制', desc: '拆解一次工具调用流程' }] });
+      document.getElementById('weekly-container').innerHTML = '<div style="padding:40px;text-align:center;font-size:12px;color:var(--muted);">正在规划本周深度实战目标...</div>';
+      // 🚨 增强 Prompt：要求 AI 提供更具“产品实战深度”的目标
+      const prompt = `你是一位AI产品总监。请为第${weekNum}周制定3个深度学习目标。要求：每个目标必须包含“核心理论”+“业务应用场景”+“面试避坑点”。按JSON返回:{"theme":"..","goals":[{"title":"..","desc":".."}]}`;
+      weekly = await askGemini(prompt, { theme: 'AI PM 实战进阶', goals: [{ title: 'RAG架构深度拆解', desc: '不仅要懂检索，还要说清如何解决向量库的噪声问题及重排（Rerank）在金融场景的必要性。' }, { title: 'Agent 多工具调用编排', desc: '梳理一套能够自主调用查询接口、计算工具并输出报告的 Agent 逻辑，重点在于判断循环（Loop）的终点。' }] });
       lsave(cacheKey, weekly);
     }
     
     const c = document.getElementById('weekly-container');
     if (c && weekly && weekly.goals) {
       c.innerHTML = weekly.goals.map((g, i) => {
-        const key = `w${weekNum}_${i+1}`; const isDone = state.weekly[key];
-        return `<div class="weekly-block">
-          <div style="font-size:10px;color:var(--gold);margin-bottom:8px;">📌 目标 ${i+1}</div>
-          <div style="font-size:16px;margin-bottom:8px;">${g.title}</div>
-          <div style="font-size:13px;color:rgba(255,255,255,0.7);margin-bottom:16px;line-height:1.6;">${g.desc}</div>
-          <textarea class="weekly-input" placeholder="贴入笔记..." oninput="state.reflections['${key}']=this.value;lsave('state',state);">${state.reflections[key]||''}</textarea>
-          <button class="weekly-check-btn ${isDone?'done':''}" onclick="state.weekly['${key}']=!state.weekly['${key}'];lsave('state',state);this.classList.toggle('done');">标记完成</button>
+        const key = `w${weekNum}_${i+1}`; 
+        const isDone = state.weekly[key];
+        const isOpen = i === 0; // 默认展开第一个
+
+        return `
+        <div class="day-card">
+          <div class="day-header" onclick="this.nextElementSibling.classList.toggle('open')">
+            <div class="day-label">
+              <span class="day-num" style="background:rgba(212,168,67,0.1);color:var(--gold);">WEEKLY GOAL ${i+1}</span>
+              <span class="day-title">${g.title}</span>
+            </div>
+          </div>
+          <div class="day-body ${isOpen ? 'open' : ''}">
+            <div class="knowledge-block" style="border-left-color: var(--gold); background: rgba(212,168,67,0.03);">
+              <div class="knowledge-label" style="color:var(--gold);">🎯 深度拆解 / 实战任务</div>
+              <div class="knowledge-p">${g.desc}</div>
+            </div>
+            <div class="reflection-block">
+              <div style="font-family:'Space Mono',monospace;font-size:10px;color:var(--muted);margin-bottom:10px;">✍️ 任务笔记 / 实战心得</div>
+              <textarea class="reflection-input" placeholder="请记录你对该目标的深度思考或实战产出..." oninput="state.reflections['${key}']=this.value;lsave('state',state);">${state.reflections[key]||''}</textarea>
+            </div>
+            <div class="check-row">
+              <button class="check-btn ${isDone?'checked':''}" id="btn-weekly-${key}" onclick="toggleWeeklyDone('${key}', this)">
+                ${isDone ? '目标已达成 ✓' : '标记目标完成'}
+              </button>
+            </div>
+          </div>
         </div>`;
       }).join('');
     }
   }
 
-  // ── 三表同步路由 (飞书语法强兼容) ────────────────────────────────────────────────
-  function saveReflect(id, val) { state.reflections[id] = val; lsave('state', state); scheduleSync(); }
-
-  function scheduleSync(itemId, type) {
-    setSyncStatus('syncing', '正在分发数据...');
-    clearTimeout(syncTimeout);
-    syncTimeout = setTimeout(() => { 
-      syncMainTracker(); 
-      if (type === 'knowledge' && itemId) syncSingleKnowledge(itemId);
-      if (type === 'interview' && itemId) syncSingleInterview(itemId);
-    }, 1500);
+  // 辅助函数：处理周目标点击
+  function toggleWeeklyDone(key, btn) {
+    state.weekly[key] = !state.weekly[key];
+    lsave('state', state);
+    btn.classList.toggle('checked');
+    btn.textContent = state.weekly[key] ? '目标已达成 ✓' : '标记目标完成';
+    updateProgress();
+    // 同时也触发一次飞书主表同步
+    scheduleSync();
   }
 
+  
   async function syncMainTracker() {
     let kCount = 0; getKnowledgeCache().forEach((_, i) => { if (state.done['k'+i]) kCount++; });
     let qCount = 0; getInterviewCache().forEach(q => { if (state.done[q.id]) qCount++; });
