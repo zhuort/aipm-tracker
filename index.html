@@ -427,59 +427,76 @@
   }
 
   async function getAIEvaluation(qid) {
-    // 【修改点 - 双保险读取】优先读取状态，如果状态为空，自动去抓取页面上对应的文本框内容
+    // 1. 【双保险读取答案】优先读状态，状态为空则动态去抓页面上的 textarea
     let userAnswer = state.reflections[qid] || '';
     
     if (!userAnswer.trim()) {
-        // 尝试通过常见的 id 规则在页面上寻找输入框（你可以根据你的 HTML 调整选择器，比如 '#textarea-' + qid 等）
         const fallbackTextarea = document.getElementById('input-' + qid) || 
                                  document.getElementById('reflection-' + qid) || 
                                  document.querySelector(`textarea[data-qid="${qid}"]`) ||
-                                 document.querySelector('textarea'); // 最终兜底：抓页面上的文本域
+                                 document.querySelector('textarea');
         if (fallbackTextarea && fallbackTextarea.value) {
             userAnswer = fallbackTextarea.value;
-            // 顺便把漏掉的状态补回去，防止后续提交出错
             if (!state.reflections) state.reflections = {};
             state.reflections[qid] = userAnswer;
             lsave('state', state);
         }
     }
 
-    // 判断字数是否合规
+    // 2. 判断字数
     if (userAnswer.trim().length < 10) { 
         alert('写点答案再让AI点评吧！（至少输入10个字哦）'); 
         return; 
     }
     
     const q = getInterviewCache().find(x => x.id === qid);
+    
+    // 3. 【安全获取 UI 元素】加上防御性保护，找不到也不至于崩溃
     const btn = document.getElementById('btn-ai-' + qid);
     const commentBox = document.getElementById('ai-comment-' + qid); 
     const commentText = document.getElementById('ai-comment-text-' + qid);
     
-    btn.textContent = '🤖 思考中...'; 
-    btn.disabled = true;
-    commentBox.style.display = 'block'; 
-    commentText.innerHTML = '<span style="color:var(--muted)">正在生成专业点评...</span>';
+    // 如果按钮存在，则切换成思考状态
+    if (btn) {
+        btn.textContent = '🤖 思考中...'; 
+        btn.disabled = true;
+    }
+    
+    // 如果点评容器存在，则展示并提示
+    if (commentBox) commentBox.style.display = 'block'; 
+    if (commentText) commentText.innerHTML = '<span style="color:var(--muted)">正在生成专业点评...</span>';
 
+    // 4. 请求 Gemini 获取点评
     const prompt = `你是严厉的AI PM面试官。题：${q.title}。候选人答案：${userAnswer}。请客观点评亮点与不足，给出建议。纯文本输出。`;
     const aiComment = await askGeminiText(prompt, 'AI 思考开了小差，请重试');
     
+    // 5. 存储点评状态
     if (!state.aiComments) state.aiComments = {}; 
     state.aiComments[qid] = aiComment; 
     lsave('state', state);
     
-    commentText.innerHTML = aiComment.replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/\n/g, '<br>');
-    btn.textContent = '重新获取点评'; 
-    btn.disabled = false;
+    // 6. 【渲染点评内容】如果有文本框就渲染进去，没有就直接弹窗展示给您
+    if (commentText) {
+        commentText.innerHTML = aiComment.replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/\n/g, '<br>');
+    } else {
+        // 兜底机制：万一页面上真没写展示框，直接弹窗看点评，不浪费生成的 Token
+        alert("🤖 AI 面试官点评：\n\n" + aiComment);
+    }
     
+    // 7. 恢复按钮状态
+    if (btn) {
+        btn.textContent = '重新获取点评'; 
+        btn.disabled = false;
+    }
+    
+    // 8. 进度打卡更新
     if (!state.done[qid]) { 
         state.done[qid] = true; 
         updateProgress(); 
-        renderInterview(); 
+        if (typeof renderInterview === 'function') renderInterview(); 
     }
     scheduleSync(qid, 'interview');
 }
-
   function renderInterview() {
     const arr = getInterviewCache();
     const container = document.getElementById('interview-container');
