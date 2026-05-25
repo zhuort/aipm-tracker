@@ -427,25 +427,58 @@
   }
 
   async function getAIEvaluation(qid) {
-    const userAnswer = state.reflections[qid] || '';
-    if (userAnswer.trim().length < 10) { alert('写点答案再让AI点评吧！'); return; }
+    // 【修改点 - 双保险读取】优先读取状态，如果状态为空，自动去抓取页面上对应的文本框内容
+    let userAnswer = state.reflections[qid] || '';
+    
+    if (!userAnswer.trim()) {
+        // 尝试通过常见的 id 规则在页面上寻找输入框（你可以根据你的 HTML 调整选择器，比如 '#textarea-' + qid 等）
+        const fallbackTextarea = document.getElementById('input-' + qid) || 
+                                 document.getElementById('reflection-' + qid) || 
+                                 document.querySelector(`textarea[data-qid="${qid}"]`) ||
+                                 document.querySelector('textarea'); // 最终兜底：抓页面上的文本域
+        if (fallbackTextarea && fallbackTextarea.value) {
+            userAnswer = fallbackTextarea.value;
+            // 顺便把漏掉的状态补回去，防止后续提交出错
+            if (!state.reflections) state.reflections = {};
+            state.reflections[qid] = userAnswer;
+            lsave('state', state);
+        }
+    }
+
+    // 判断字数是否合规
+    if (userAnswer.trim().length < 10) { 
+        alert('写点答案再让AI点评吧！（至少输入10个字哦）'); 
+        return; 
+    }
+    
     const q = getInterviewCache().find(x => x.id === qid);
     const btn = document.getElementById('btn-ai-' + qid);
-    const commentBox = document.getElementById('ai-comment-' + qid); const commentText = document.getElementById('ai-comment-text-' + qid);
+    const commentBox = document.getElementById('ai-comment-' + qid); 
+    const commentText = document.getElementById('ai-comment-text-' + qid);
     
-    btn.textContent = '🤖 思考中...'; btn.disabled = true;
-    commentBox.style.display = 'block'; commentText.innerHTML = '<span style="color:var(--muted)">正在生成专业点评...</span>';
+    btn.textContent = '🤖 思考中...'; 
+    btn.disabled = true;
+    commentBox.style.display = 'block'; 
+    commentText.innerHTML = '<span style="color:var(--muted)">正在生成专业点评...</span>';
 
     const prompt = `你是严厉的AI PM面试官。题：${q.title}。候选人答案：${userAnswer}。请客观点评亮点与不足，给出建议。纯文本输出。`;
     const aiComment = await askGeminiText(prompt, 'AI 思考开了小差，请重试');
     
-    if (!state.aiComments) state.aiComments = {}; state.aiComments[qid] = aiComment; lsave('state', state);
-    commentText.innerHTML = aiComment.replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/\n/g, '<br>');
-    btn.textContent = '重新获取点评'; btn.disabled = false;
+    if (!state.aiComments) state.aiComments = {}; 
+    state.aiComments[qid] = aiComment; 
+    lsave('state', state);
     
-    if (!state.done[qid]) { state.done[qid] = true; updateProgress(); renderInterview(); }
+    commentText.innerHTML = aiComment.replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/\n/g, '<br>');
+    btn.textContent = '重新获取点评'; 
+    btn.disabled = false;
+    
+    if (!state.done[qid]) { 
+        state.done[qid] = true; 
+        updateProgress(); 
+        renderInterview(); 
+    }
     scheduleSync(qid, 'interview');
-  }
+}
 
   function renderInterview() {
     const arr = getInterviewCache();
